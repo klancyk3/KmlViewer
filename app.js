@@ -164,16 +164,7 @@ document.getElementById('layersBtn').addEventListener('click', () => {
     }
 });
 
-// Boundary rendering options
-document.getElementById('drawOuterBoundary').addEventListener('change', (e) => {
-    renderer.renderOptions.drawOuterBoundary = e.target.checked;
-    renderer.requestUpdate();
-});
 
-document.getElementById('drawInnerBoundary').addEventListener('change', (e) => {
-    renderer.renderOptions.drawInnerBoundary = e.target.checked;
-    renderer.requestUpdate();
-});
 
 
 
