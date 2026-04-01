@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kml-viewer-v1';
+const CACHE_NAME = 'kml-viewer-v2';
 const MAP_CACHE = 'osm-map-tiles-v1';
 const ASSETS = [
     './',

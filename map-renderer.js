@@ -173,6 +173,7 @@ class MapRenderer {
         this.isDragging = false;
         this.lastMouse = { x: 0, y: 0 };
         this.lastTouchDistance = 0;
+        this.lastTapTime = 0;
         this.isPinching = false;
 
         this.mapSources = {
@@ -322,7 +323,20 @@ class MapRenderer {
         // --- Touch Events ---
         this.canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            const now = Date.now();
+            const rect = this.canvas.getBoundingClientRect();
+
             if (e.touches.length === 1) {
+                // Double tap check
+                if (now - this.lastTapTime < 300) {
+                    const tx = e.touches[0].clientX - rect.left;
+                    const ty = e.touches[0].clientY - rect.top;
+                    this.handleDoubleTap(tx, ty);
+                    this.lastTapTime = 0; // Reset to prevent triple tap
+                    return;
+                }
+                this.lastTapTime = now;
+
                 this.isDragging = true;
                 this.isPinching = false;
                 this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -356,33 +370,36 @@ class MapRenderer {
                 const dy = e.touches[0].clientY - e.touches[1].clientY;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                // Calculate pinch center in screen coords
-                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
-                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-                const centerGeo = this.unproject(centerX, centerY);
+                if (distance > 10 && this.lastTouchDistance > 0) {
+                    // Calculate pinch center in screen coords
+                    const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+                    const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+                    const centerGeo = this.unproject(centerX, centerY);
 
-                const zoomDiff = (distance - this.lastTouchDistance) * 0.01;
-                this.zoom = Math.max(1, Math.min(22, this.zoom + zoomDiff));
+                    // Use logarithmic zoom for smoother feel
+                    const zoomDiff = Math.log2(distance / this.lastTouchDistance);
+                    this.zoom = Math.max(1, Math.min(22, this.zoom + zoomDiff));
 
-                // Recenter after zoom to stay on pinch center
-                const newCenterWorld = this.project(centerGeo.lon, centerGeo.lat);
-                const cx = this.canvas.width / 2;
-                const cy = this.canvas.height / 2;
-                const newCenterWorldX = newCenterWorld.x - (centerX - cx);
-                const newCenterWorldY = newCenterWorld.y - (centerY - cy);
+                    // Recenter after zoom to stay on pinch center
+                    const newCenterWorld = this.project(centerGeo.lon, centerGeo.lat);
+                    const cx = this.canvas.width / 2;
+                    const cy = this.canvas.height / 2;
+                    const newCenterWorldX = newCenterWorld.x - (centerX - cx);
+                    const newCenterWorldY = newCenterWorld.y - (centerY - cy);
 
-                const tileSize = this.tileSystem.tileSize;
-                const scale = Math.pow(2, this.zoom);
-                const normX = newCenterWorldX / (tileSize * scale);
-                const normY = newCenterWorldY / (tileSize * scale);
+                    const tileSize = this.tileSystem.tileSize;
+                    const scale = Math.pow(2, this.zoom);
+                    const normX = newCenterWorldX / (tileSize * scale);
+                    const normY = newCenterWorldY / (tileSize * scale);
 
-                const lon = normX * 360 - 180;
-                const n = Math.PI - 2 * Math.PI * normY;
-                const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+                    const lon = normX * 360 - 180;
+                    const n = Math.PI - 2 * Math.PI * normY;
+                    const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
 
-                this.center = { lon, lat };
-                this.lastTouchDistance = distance;
-                this.requestUpdate();
+                    this.center = { lon, lat };
+                    this.lastTouchDistance = distance;
+                    this.requestUpdate();
+                }
             }
         }, { passive: false });
 
@@ -400,9 +417,34 @@ class MapRenderer {
             }
             this.isDragging = false;
             this.isPinching = false;
+            this.lastTouchDistance = 0;
         });
 
 
+    }
+
+    handleDoubleTap(screenX, screenY) {
+        const mouseGeo = this.unproject(screenX, screenY);
+        const oldZoom = this.zoom;
+        this.zoom = Math.min(22, Math.floor(this.zoom + 1));
+        
+        if (this.zoom !== oldZoom) {
+            const newCenterWorld = this.project(mouseGeo.lon, mouseGeo.lat);
+            const cx = this.canvas.width / 2;
+            const cy = this.canvas.height / 2;
+            
+            const tileSize = this.tileSystem.tileSize;
+            const scale = Math.pow(2, this.zoom);
+            const normX = (newCenterWorld.x - (screenX - cx)) / (tileSize * scale);
+            const normY = (newCenterWorld.y - (screenY - cy)) / (tileSize * scale);
+
+            const lon = normX * 360 - 180;
+            const n = Math.PI - 2 * Math.PI * normY;
+            const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+
+            this.center = { lon, lat };
+            this.requestUpdate();
+        }
     }
 
     setMapSource(sourceKey, apiKey = '') {
