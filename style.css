@@ -65,6 +65,45 @@ canvas:active {
     top: 24px;
     left: 24px;
     width: 280px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.info-panel.minimized .subtitle,
+.info-panel.minimized .stats,
+.info-panel.minimized .controls-hint {
+    display: none;
+}
+
+.info-panel.minimized {
+    padding-bottom: 12px;
+}
+
+.minimize-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.minimize-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: var(--accent);
 }
 
 .layers-panel {
@@ -86,7 +125,7 @@ h1 {
     font-size: 20px;
     font-weight: 600;
     letter-spacing: -0.02em;
-    margin-bottom: 4px;
+    margin-bottom: 0;
 }
 
 h2 {

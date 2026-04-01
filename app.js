@@ -164,9 +164,15 @@ document.getElementById('layersBtn').addEventListener('click', () => {
     }
 });
 
-
-
-
+// Info Panel Minimize Toggle
+const infoPanel = document.getElementById('infoPanel');
+const minimizeInfoBtn = document.getElementById('minimizeInfoBtn');
+if (infoPanel && minimizeInfoBtn) {
+    minimizeInfoBtn.addEventListener('click', () => {
+        infoPanel.classList.toggle('minimized');
+        minimizeInfoBtn.textContent = infoPanel.classList.contains('minimized') ? '+' : '−';
+    });
+}
 
 function updateProgress(percent, text) {
     if (progressBar) progressBar.style.width = percent + '%';
