@@ -164,6 +164,165 @@ document.getElementById('layersBtn').addEventListener('click', () => {
     }
 });
 
+// Location Tracking Logic
+let trackingWatchId = null;
+let currentTrackPoints = [];
+const trackCheckbox = document.getElementById('trackLocation');
+const trackBtn = document.getElementById('trackBtn');
+
+if (trackCheckbox) {
+    trackCheckbox.addEventListener('change', (e) => {
+        const active = e.target.checked;
+        if (trackBtn) trackBtn.classList.toggle('active', active);
+        if (active) {
+            startTracking();
+        } else {
+            stopTracking();
+        }
+    });
+
+    if (trackBtn) {
+        trackBtn.addEventListener('click', () => {
+            trackCheckbox.click(); // Trigger the same logic
+        });
+    }
+}
+
+function startTracking() {
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        trackCheckbox.checked = false;
+        return;
+    }
+
+    currentTrackPoints = [];
+    console.log("Starting location tracking...");
+
+    trackingWatchId = navigator.geolocation.watchPosition(
+        (position) => {
+            const { latitude, longitude, altitude, speed } = position.coords;
+            const time = new Date(position.timestamp).toISOString();
+
+            const pt = { lat: latitude, lon: longitude, alt: altitude, time };
+            currentTrackPoints.push(pt);
+
+            // Add point to map for visualization
+            const traceFeature = {
+                name: 'Live Trace',
+                type: 'user_track_element',
+                geometries: [{
+                    type: 'Point',
+                    coordinates: { lat: latitude, lon: longitude }
+                }],
+                style: {
+                    fillColor: '#3b82f6',
+                    radius: 4
+                }
+            };
+            renderer.addFeatures([traceFeature], false);
+
+            // Optimization: Only redraw if enough distance moved or every few points
+            renderer.requestUpdate();
+        },
+        (error) => {
+            console.error("Tracking error:", error);
+            alert(`Error tracking location: ${error.message}`);
+            if (trackCheckbox) trackCheckbox.checked = false;
+            if (trackBtn) trackBtn.classList.remove('active');
+            stopTracking();
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 1000,
+            timeout: 5000
+        }
+    );
+}
+
+function stopTracking() {
+    if (trackingWatchId !== null) {
+        navigator.geolocation.clearWatch(trackingWatchId);
+        trackingWatchId = null;
+        console.log("Stopped location tracking.");
+
+        if (currentTrackPoints.length > 0) {
+            saveGpx(currentTrackPoints);
+        }
+        
+        // Ensure UI is in sync
+        if (trackCheckbox) trackCheckbox.checked = false;
+        if (trackBtn) trackBtn.classList.remove('active');
+
+        // Cleanup live trace points from map
+        renderer.features = renderer.features.filter(f => f.type !== 'user_track_element');
+        renderer.requestUpdate();
+    }
+}
+
+function generateGpx(points) {
+    const time = new Date().toISOString();
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="KML Canvas Viewer" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <time>${time}</time>
+  </metadata>
+  <trk>
+    <name>Track ${new Date().toLocaleString()}</name>
+    <trkseg>
+`;
+
+    points.forEach(p => {
+        xml += `      <trkpt lat="${p.lat}" lon="${p.lon}">
+        ${p.alt ? `<ele>${p.alt}</ele>` : ''}
+        <time>${p.time}</time>
+      </trkpt>\n`;
+    });
+
+    xml += `    </trkseg>
+  </trk>
+</gpx>`;
+    return xml;
+}
+
+async function saveGpx(points) {
+    const gpxContent = generateGpx(points);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `track-${timestamp}.gpx`;
+
+    try {
+        const response = await fetch('/save-gpx', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename, content: gpxContent })
+        });
+
+        if (response.ok) {
+            console.log("GPX saved successfully to folder gpxes");
+            // Optional visual feedback
+            alert(`Track saved: ${filename}`);
+        } else {
+            console.error("Failed to save GPX server-side, trying locally...");
+            downloadLocally(filename, gpxContent);
+        }
+    } catch (err) {
+        console.error("Error saving to server, trying locally:", err);
+        downloadLocally(filename, gpxContent);
+    }
+}
+
+function downloadLocally(filename, content) {
+    const blob = new Blob([content], { type: 'application/gpx+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert(`Server unavailable. Downloaded locally: ${filename}\nPlease move it to 'gpxes' folder manually if needed.`);
+}
+
 // Info Panel Minimize Toggle
 const infoPanel = document.getElementById('infoPanel');
 const minimizeInfoBtn = document.getElementById('minimizeInfoBtn');

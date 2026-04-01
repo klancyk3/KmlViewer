@@ -67,6 +67,11 @@
         <div id="layersPanel" class="panel layers-panel hidden">
             <h2>Layers</h2>
             <label class="layer-item">
+                <input type="checkbox" class="layer-checkbox" id="trackLocation">
+                <span class="layer-label">📍 Track Location</span>
+            </label>
+            <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
+            <label class="layer-item">
                 <input type="checkbox" class="layer-checkbox" id="layerSquadrats" checked>
                 <span class="layer-label">Squadrats (Z14)</span>
             </label>
@@ -90,7 +95,7 @@
                 <option value="cycle">🚲 Cycle Map (OCM)</option>
                 <option value="satellite">🛰️ Satellite (Esri)</option>
             </select>
-
+            </select>
         </div>
 
         <div id="mapAttribution" class="map-attribution">
@@ -99,6 +104,8 @@
 
         <div class="panel controls-panel">
             <button id="layersBtn" class="icon-btn" title="Toggle Layers">☰</button>
+            <div class="divider"></div>
+            <button id="trackBtn" class="icon-btn" title="Track Location">📡</button>
             <div class="divider"></div>
             <button id="calcPathBtn" class="icon-btn" title="Calculate Path">📍</button>
             <div class="divider"></div>

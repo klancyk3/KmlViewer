@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "KML Viewer using HTML5 Canvas and OpenStreetMap",
     "scripts": {
-        "start": "npx http-server . -p 8080 -c-1",
+        "start": "node server.js",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage"
@@ -24,6 +24,8 @@
     "dependencies": {
         "@capacitor/android": "^8.0.1",
         "@capacitor/cli": "^8.0.1",
-        "@capacitor/core": "^8.0.1"
+        "@capacitor/core": "^8.0.1",
+        "cors": "^2.8.6",
+        "express": "^4.22.1"
     }
 }

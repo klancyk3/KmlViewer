@@ -910,13 +910,17 @@ class MapRenderer {
                     const sx = p.x - centerWorld.x + cx;
                     const sy = p.y - centerWorld.y + cy;
 
-                    this.ctx.fillStyle = '#ef4444';
+                    const style = feature.style || {};
+                    this.ctx.fillStyle = style.fillColor || '#ef4444';
                     this.ctx.beginPath();
-                    this.ctx.arc(sx, sy, 5, 0, Math.PI * 2);
+                    this.ctx.arc(sx, sy, style.radius || 5, 0, Math.PI * 2);
                     this.ctx.fill();
-                    this.ctx.strokeStyle = '#fff';
-                    this.ctx.lineWidth = 2;
-                    this.ctx.stroke();
+                    
+                    if (style.outline !== false) {
+                        this.ctx.strokeStyle = style.strokeColor || '#fff';
+                        this.ctx.lineWidth = style.strokeWidth || 2;
+                        this.ctx.stroke();
+                    }
                 }
             });
         });
