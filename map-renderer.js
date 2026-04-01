@@ -2,21 +2,25 @@ class TileSystem {
     constructor() {
         this.cache = new Map();
         this.tileSize = 256;
-        this.baseUrl = 'https://tile.openstreetmap.org';
-        this.apiKey = ''; // Optional API key
+        this.urlTemplate = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        this.apiKey = '';
     }
 
-    setBaseUrl(url, apiKey = '') {
-        if (this.baseUrl !== url || this.apiKey !== apiKey) {
-            this.baseUrl = url;
+    setTemplate(template, apiKey = '') {
+        if (this.urlTemplate !== template || this.apiKey !== apiKey) {
+            this.urlTemplate = template;
             this.apiKey = apiKey;
             this.cache.clear();
         }
     }
 
     getTile(x, y, z) {
-        let url = `${this.baseUrl}/${z}/${x}/${y}.png`;
-        if (this.apiKey) url += `?apikey=${this.apiKey}`;
+        let url = this.urlTemplate
+            .replace('{z}', z)
+            .replace('{x}', x)
+            .replace('{y}', y);
+        
+        if (this.apiKey) url += (url.includes('?') ? '&' : '?') + `apikey=${this.apiKey}`;
 
         if (this.cache.has(url)) {
             return this.cache.get(url);
@@ -178,12 +182,16 @@ class MapRenderer {
 
         this.mapSources = {
             standard: {
-                url: 'https://tile.openstreetmap.org',
+                url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 attribution: 'Tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
             },
             cycle: {
-                url: 'https://tile.thunderforest.com/cycle',
+                url: 'https://tile.thunderforest.com/cycle/{z}/{x}/{y}.png',
                 attribution: 'Tiles © <a href="https://www.thunderforest.com/" target="_blank">Thunderforest</a>, Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+            },
+            satellite: {
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: 'Tiles © <a href="https://www.esri.com/" target="_blank">Esri</a>, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
             }
         };
 
@@ -451,7 +459,7 @@ class MapRenderer {
         if (this.mapSources[sourceKey]) {
             this.currentSource = sourceKey;
             const src = this.mapSources[sourceKey];
-            this.tileSystem.setBaseUrl(src.url, apiKey);
+            this.tileSystem.setTemplate(src.url, apiKey);
 
             const attrEl = document.getElementById('mapAttribution');
             if (attrEl) {
