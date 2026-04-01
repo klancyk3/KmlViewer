@@ -473,9 +473,6 @@ h2 {
     }
 
     #positionOverlay {
-        bottom: 72px !important;
-        left: 12px !important;
-        font-size: 12px;
-        padding: 6px 10px;
+        display: none !important;
     }
 }
