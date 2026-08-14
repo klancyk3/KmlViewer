@@ -56,6 +56,10 @@
                     <span class="label">Path Distance</span>
                     <span id="pathDistance" class="value" style="color: var(--accent);">-</span>
                 </div>
+                <div class="stat-item" style="grid-column: span 3;">
+                    <span class="label">Szlaki</span>
+                    <span id="trailDistance" class="value" style="color: #22c55e;">0.0 km</span>
+                </div>
             </div>
             <div class="controls-hint">
                 <p>🖱️ Drag to Pan</p>
@@ -72,21 +76,40 @@
             </label>
             <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
             <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerSquadrats" checked>
+                <input type="checkbox" class="layer-checkbox" id="layerSquadrats">
                 <span class="layer-label">Squadrats (Z14)</span>
             </label>
             <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerSquadrathinos" checked>
+                <input type="checkbox" class="layer-checkbox" id="layerSquadrathinos">
                 <span class="layer-label">Squadrathinos (Z17)</span>
             </label>
             <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerUbersquadrat" checked>
+                <input type="checkbox" class="layer-checkbox" id="layerUbersquadrat">
                 <span class="layer-label">Ubersquadrat (Z11)</span>
             </label>
             <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerUbersquadratinho" checked>
+                <input type="checkbox" class="layer-checkbox" id="layerUbersquadratinho">
                 <span class="layer-label">Ubersquadratinho (Z14)</span>
             </label>
+
+            <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
+            <h3 style="font-size: 14px; margin: 8px 0 4px 0; color: #9ca3af;">Szlaki GPX</h3>
+            <label class="layer-item">
+                <input type="checkbox" class="layer-checkbox" id="trailsLayerEnabled" checked>
+                <span class="layer-label">Pokaż szlaki</span>
+            </label>
+            <div class="trail-type-row">
+                <label class="layer-item compact">
+                    <input type="checkbox" class="layer-checkbox" id="trailTypeFoot" checked>
+                    <span class="layer-label">foot</span>
+                </label>
+                <label class="layer-item compact">
+                    <input type="checkbox" class="layer-checkbox" id="trailTypeHiking" checked>
+                    <span class="layer-label">hiking</span>
+                </label>
+            </div>
+            <select id="trailRegionSelect" class="panel-select" multiple size="5"></select>
+            <div id="trailLayerStatus" class="layer-status">Szlaki wyłączone</div>
 
             <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
             <h3 style="font-size: 14px; margin: 8px 0 4px 0; color: #9ca3af;">Map Source</h3>

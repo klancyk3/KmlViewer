@@ -15,11 +15,13 @@ class GPXParser {
     parse(xmlString, sourceName = 'GPX Track') {
         const xmlDoc = this.parser.parseFromString(xmlString, 'text/xml');
         const features = [];
+        this.documentTrailColor = this.getTrailColor(xmlDoc);
 
         this.parseTracks(xmlDoc, sourceName, features);
         this.parseRoutes(xmlDoc, sourceName, features);
         this.parseWaypoints(xmlDoc, sourceName, features);
 
+        this.documentTrailColor = null;
         return features;
     }
 
@@ -28,6 +30,7 @@ class GPXParser {
 
         tracks.forEach((track, trackIndex) => {
             const trackName = this.getNodeValue(track, 'name') || sourceName;
+            const trailColor = this.getTrailColor(track) || this.documentTrailColor;
             const segments = this.getElements(track, 'trkseg');
 
             segments.forEach((segment, segmentIndex) => {
@@ -40,7 +43,7 @@ class GPXParser {
                 features.push({
                     type: 'gpx',
                     name: segments.length > 1 ? `${trackName} (${segmentIndex + 1})` : trackName,
-                    style: this.getTrackStyle(trackIndex + segmentIndex),
+                    style: this.getTrackStyle(trackIndex + segmentIndex, trailColor),
                     geometries: [{
                         type: coordinates.length === 1 ? 'Point' : 'LineString',
                         coordinates: coordinates.length === 1 ? coordinates[0] : coordinates
@@ -57,13 +60,14 @@ class GPXParser {
             const coordinates = this.getElements(route, 'rtept')
                 .map(point => this.parsePoint(point))
                 .filter(Boolean);
+            const trailColor = this.getTrailColor(route) || this.documentTrailColor;
 
             if (coordinates.length === 0) return;
 
             features.push({
                 type: 'gpx',
                 name: this.getNodeValue(route, 'name') || `${sourceName} route`,
-                style: this.getTrackStyle(routeIndex),
+                style: this.getTrackStyle(routeIndex, trailColor),
                 geometries: [{
                     type: coordinates.length === 1 ? 'Point' : 'LineString',
                     coordinates: coordinates.length === 1 ? coordinates[0] : coordinates
@@ -117,13 +121,43 @@ class GPXParser {
         return point;
     }
 
-    getTrackStyle(index) {
+    getTrackStyle(index, preferredColor = null) {
+        const color = preferredColor || this.trackColors[index % this.trackColors.length];
+
         return {
-            strokeColor: this.trackColors[index % this.trackColors.length],
+            strokeColor: color,
             strokeWidth: 4,
-            fillColor: this.trackColors[index % this.trackColors.length],
+            fillColor: color,
             radius: 4
         };
+    }
+
+    getTrailColor(node) {
+        return this.colorNameToCss(this.getNodeValue(node, 'colour') || this.getNodeValue(node, 'color'));
+    }
+
+    colorNameToCss(value) {
+        if (!value) return null;
+
+        const normalized = value.trim().toLowerCase();
+        const namedColors = {
+            black: '#111827',
+            blue: '#2563eb',
+            brown: '#92400e',
+            green: '#16a34a',
+            grey: '#6b7280',
+            gray: '#6b7280',
+            orange: '#f97316',
+            purple: '#9333ea',
+            red: '#dc2626',
+            violet: '#7c3aed',
+            white: '#f8fafc',
+            yellow: '#eab308'
+        };
+
+        if (/^#[0-9a-f]{3,8}$/i.test(normalized)) return normalized;
+
+        return namedColors[normalized] || null;
     }
 
     getNodeValue(parent, tagName) {

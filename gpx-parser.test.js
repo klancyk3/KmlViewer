@@ -71,4 +71,23 @@ describe('GPXParser', () => {
         expect(features[0].geometries[0].type).toBe('Point');
         expect(features[0].geometries[0].coordinates).toEqual({ lat: 50, lon: 19 });
     });
+
+    test('uses OSM trail colour for track styles', () => {
+        const gpx = `<gpx xmlns:osmt="https://openstreetmap.org/trails">
+            <trk>
+                <extensions>
+                    <osmt:colour>blue</osmt:colour>
+                </extensions>
+                <trkseg>
+                    <trkpt lat="50" lon="19"></trkpt>
+                    <trkpt lat="51" lon="20"></trkpt>
+                </trkseg>
+            </trk>
+        </gpx>`;
+
+        const features = parser.parse(gpx, 'blue.gpx');
+
+        expect(features[0].style.strokeColor).toBe('#2563eb');
+        expect(features[0].style.fillColor).toBe('#2563eb');
+    });
 });

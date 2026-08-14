@@ -199,10 +199,10 @@ class MapRenderer {
 
         // Layer flags
         this.layers = {
-            squadrats: true,      // Z14
-            squadrathinos: true,  // Z17
-            ubersquadrat: true,   // Z11
-            ubersquadratinho: true // Z14 (Distinct)
+            squadrats: false,      // Z14
+            squadrathinos: false,  // Z17
+            ubersquadrat: false,   // Z11
+            ubersquadratinho: false // Z14 (Distinct)
         };
 
         // Rendering options

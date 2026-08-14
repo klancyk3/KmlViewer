@@ -77,6 +77,217 @@ async function loadSavedGpxFiles() {
     }
 }
 
+let trailLoadAbortController = null;
+
+function removeTrailFeatures() {
+    renderer.features = renderer.features.filter(feature => feature.type !== 'trail_gpx');
+    renderer.updateStats();
+    renderer.requestUpdate();
+}
+
+function setTrailDistance(kilometers) {
+    const distanceEl = document.getElementById('trailDistance');
+    if (distanceEl) distanceEl.textContent = `${kilometers.toFixed(1)} km`;
+}
+
+function calculateLineDistanceKm(coordinates) {
+    let total = 0;
+
+    for (let i = 1; i < coordinates.length; i++) {
+        total += distanceBetweenKm(coordinates[i - 1], coordinates[i]);
+    }
+
+    return total;
+}
+
+function distanceBetweenKm(p1, p2) {
+    const earthRadiusKm = 6371.0088;
+    const toRad = degrees => degrees * Math.PI / 180;
+    const dLat = toRad(p2.lat - p1.lat);
+    const dLon = toRad(p2.lon - p1.lon);
+    const lat1 = toRad(p1.lat);
+    const lat2 = toRad(p2.lat);
+    const a = Math.sin(dLat / 2) ** 2
+        + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+
+    return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function getSelectedTrailTypes() {
+    const types = [];
+    const footEl = document.getElementById('trailTypeFoot');
+    const hikingEl = document.getElementById('trailTypeHiking');
+
+    if (footEl && footEl.checked) types.push('foot');
+    if (hikingEl && hikingEl.checked) types.push('hiking');
+
+    return types;
+}
+
+function getSelectedTrailRegions() {
+    const select = document.getElementById('trailRegionSelect');
+    if (!select) return [];
+
+    return Array.from(select.selectedOptions).map(option => option.value);
+}
+
+function setTrailStatus(text) {
+    const statusEl = document.getElementById('trailLayerStatus');
+    if (statusEl) statusEl.textContent = text;
+}
+
+function setTrailRegionPlaceholder(text) {
+    const regionSelect = document.getElementById('trailRegionSelect');
+    if (!regionSelect) return;
+
+    regionSelect.innerHTML = '';
+
+    const option = document.createElement('option');
+    option.textContent = text;
+    option.disabled = true;
+    regionSelect.appendChild(option);
+}
+
+async function initializeTrailLayer() {
+    const enabledEl = document.getElementById('trailsLayerEnabled');
+    const regionSelect = document.getElementById('trailRegionSelect');
+    const footEl = document.getElementById('trailTypeFoot');
+    const hikingEl = document.getElementById('trailTypeHiking');
+
+    if (!enabledEl || !regionSelect || !footEl || !hikingEl) return;
+
+    try {
+        const response = await fetch('/trail-regions');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const regions = await response.json();
+        regionSelect.innerHTML = '';
+
+        if (regions.length === 0) {
+            setTrailRegionPlaceholder('Brak województw');
+            setTrailStatus('Brak katalogu D:\\Maps\\Gpx');
+            return;
+        }
+
+        regions.forEach((region, index) => {
+            const option = document.createElement('option');
+            option.value = region.key;
+            option.textContent = region.name;
+            option.selected = true;
+            regionSelect.appendChild(option);
+        });
+
+        setTrailStatus('Ładowanie szlaków...');
+    } catch (err) {
+        console.error('Could not load trail regions:', err);
+        setTrailRegionPlaceholder('Zrestartuj serwer KmlViewer');
+        setTrailStatus('Endpoint /trail-regions niedostępny');
+    }
+
+    [enabledEl, regionSelect, footEl, hikingEl].forEach(el => {
+        el.addEventListener('change', updateTrailLayer);
+    });
+
+    if (enabledEl.checked) {
+        updateTrailLayer();
+    }
+}
+
+async function updateTrailLayer() {
+    const enabledEl = document.getElementById('trailsLayerEnabled');
+    if (!enabledEl || !enabledEl.checked) {
+        if (trailLoadAbortController) {
+            trailLoadAbortController.abort();
+            trailLoadAbortController = null;
+        }
+        removeTrailFeatures();
+        setTrailDistance(0);
+        setTrailStatus('Szlaki wyłączone');
+        return;
+    }
+
+    const regions = getSelectedTrailRegions();
+    const types = getSelectedTrailTypes();
+
+    removeTrailFeatures();
+
+    if (regions.length === 0) {
+        setTrailDistance(0);
+        setTrailStatus('Wybierz przynajmniej jedno województwo');
+        return;
+    }
+
+    if (types.length === 0) {
+        setTrailDistance(0);
+        setTrailStatus('Wybierz foot lub hiking');
+        return;
+    }
+
+    if (trailLoadAbortController) {
+        trailLoadAbortController.abort();
+    }
+
+    trailLoadAbortController = new AbortController();
+    setTrailStatus('Ładowanie szlaków...');
+
+    try {
+        const params = new URLSearchParams({
+            regions: regions.join(','),
+            types: types.join(',')
+        });
+        const response = await fetch(`/trail-gpx?${params}`, {
+            signal: trailLoadAbortController.signal
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const files = await response.json();
+        const features = [];
+        let totalTrailKm = 0;
+
+        files.forEach(file => {
+            const parsed = gpxParser.parse(file.content, file.filename);
+            parsed.forEach(feature => {
+                feature.type = 'trail_gpx';
+                feature.name = `${file.regionName} ${file.trailType}: ${feature.name}`;
+                feature.trailRegion = file.region;
+                feature.trailType = file.trailType;
+                const style = feature.style || {};
+                feature.style = {
+                    ...style,
+                    strokeColor: style.strokeColor || (file.trailType === 'hiking' ? '#22c55e' : '#f97316'),
+                    strokeWidth: file.trailType === 'hiking' ? 3 : 2,
+                    fillColor: style.fillColor || style.strokeColor || (file.trailType === 'hiking' ? '#22c55e' : '#f97316'),
+                    radius: 3
+                };
+
+                feature.geometries.forEach(geometry => {
+                    if (geometry.type === 'LineString' && geometry.coordinates) {
+                        totalTrailKm += calculateLineDistanceKm(geometry.coordinates);
+                    }
+                });
+            });
+            features.push(...parsed);
+        });
+
+        if (features.length > 0) {
+            renderer.addFeatures(features, true);
+        } else {
+            renderer.updateStats();
+        }
+
+        setTrailDistance(totalTrailKm);
+        setTrailStatus(`Załadowano ${features.length} obiektów z ${files.length} plików`);
+    } catch (err) {
+        if (err.name === 'AbortError') return;
+
+        console.error('Could not load trail GPX files:', err);
+        setTrailStatus('Nie udało się załadować szlaków');
+    } finally {
+        trailLoadAbortController = null;
+    }
+}
+
 // Controls
 document.getElementById('zoomInBtn').addEventListener('click', () => {
     renderer.zoom = Math.min(renderer.zoom + 1, 22);
@@ -441,6 +652,7 @@ updateProgress(0, 'Initializing...');
 }
 
 loadSample();
+initializeTrailLayer();
 // Initialize empty map centered on Poland
 
 if ('serviceWorker' in navigator) {

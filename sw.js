@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kml-viewer-v7';
+const CACHE_NAME = 'kml-viewer-v8';
 const MAP_CACHE = 'osm-map-tiles-v2';
 const ASSETS = [
     './',
@@ -6,6 +6,7 @@ const ASSETS = [
     './style.css',
     './app.js',
     './kml-parser.js',
+    './gpx-parser.js',
     './map-renderer.js',
     './sample.kml',
     './manifest.json'
