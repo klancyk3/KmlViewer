@@ -8,6 +8,7 @@ const loadingOverlay = document.getElementById('loadingOverlay');
 const progressBar = document.getElementById('progressBar');
 const dropZone = document.getElementById('dropZone');
 const parser = new KMLParser();
+const gpxParser = new GPXParser();
 const renderer = new MapRenderer('mapCanvas');
 
 // Drag & Drop
@@ -35,16 +36,44 @@ dropZone.addEventListener('dragleave', () => {
 
 function handleFiles(files) {
     for (const file of files) {
-        if (file.name.toLowerCase().endsWith('.kml')) {
+        const lowerName = file.name.toLowerCase();
+
+        if (lowerName.endsWith('.kml') || lowerName.endsWith('.gpx')) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const content = e.target.result;
-                const features = parser.parse(content);
+                const features = lowerName.endsWith('.gpx')
+                    ? gpxParser.parse(content, file.name)
+                    : parser.parse(content);
                 console.log(`Parsed ${features.length} features from ${file.name}`);
-                renderer.addFeatures(features, true);
+                if (features.length > 0) {
+                    renderer.addFeatures(features, true);
+                }
             };
             reader.readAsText(file);
         }
+    }
+}
+
+async function loadSavedGpxFiles() {
+    try {
+        const response = await fetch('/gpx-files');
+        if (!response.ok) return;
+
+        const files = await response.json();
+        const allFeatures = [];
+
+        files.forEach(file => {
+            const features = gpxParser.parse(file.content, file.filename);
+            allFeatures.push(...features);
+        });
+
+        if (allFeatures.length > 0) {
+            console.log(`Loaded ${allFeatures.length} GPX features from saved files`);
+            renderer.addFeatures(allFeatures, true);
+        }
+    } catch (err) {
+        console.debug('Saved GPX files are not available:', err);
     }
 }
 
@@ -383,23 +412,29 @@ updateProgress(0, 'Initializing...');
                             renderer.zoom = 10;
                             renderer.requestUpdate();
                             loadingOverlay.classList.add('hidden'); // Hide the loading overlay
+                            loadSavedGpxFiles();
                         }, 500);
                     }, 50);
                 } catch (e) {
                     console.error('Parse error:', e);
                     updateProgress(100, 'Error parsing KML');
-                    setTimeout(() => loadingOverlay.classList.add('hidden'), 1000);
+                    setTimeout(() => {
+                        loadingOverlay.classList.add('hidden');
+                        loadSavedGpxFiles();
+                    }, 1000);
                 }
             }, 50);
         } else {
             console.warn('Sample KML not found');
             loadingOverlay.classList.add('hidden');
+            loadSavedGpxFiles();
         }
     };
 
     xhr.onerror = () => {
         console.error('Network error loading sample');
         loadingOverlay.classList.add('hidden');
+        loadSavedGpxFiles();
     };
 
     xhr.send();

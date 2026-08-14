@@ -1,5 +1,5 @@
-const CACHE_NAME = 'kml-viewer-v6';
-const MAP_CACHE = 'osm-map-tiles-v1';
+const CACHE_NAME = 'kml-viewer-v7';
+const MAP_CACHE = 'osm-map-tiles-v2';
 const ASSETS = [
     './',
     './index.html',

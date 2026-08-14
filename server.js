@@ -32,6 +32,33 @@ app.post('/save-gpx', (req, res) => {
     });
 });
 
+app.get('/gpx-files', (req, res) => {
+    const gpxDir = path.join(__dirname, 'gpxes');
+
+    if (!fs.existsSync(gpxDir)) {
+        return res.json([]);
+    }
+
+    fs.readdir(gpxDir, (err, files) => {
+        if (err) {
+            console.error('Error reading GPX directory:', err);
+            return res.status(500).send('Error reading GPX directory');
+        }
+
+        const gpxFiles = files
+            .filter(file => file.toLowerCase().endsWith('.gpx'))
+            .map(file => {
+                const filePath = path.join(gpxDir, file);
+                return {
+                    filename: file,
+                    content: fs.readFileSync(filePath, 'utf8')
+                };
+            });
+
+        res.json(gpxFiles);
+    });
+});
+
 app.listen(port, () => {
     console.log(`KML Viewer server running at http://localhost:${port}`);
 });

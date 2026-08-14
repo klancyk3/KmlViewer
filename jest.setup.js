@@ -1,17 +1,21 @@
-// Jest setup file - loads the KMLParser class for testing
+// Jest setup file - loads parser classes for testing
 
 const fs = require('fs');
 const path = require('path');
 
-// Read the KMLParser source file
 const kmlParserSource = fs.readFileSync(
     path.join(__dirname, 'kml-parser.js'),
     'utf8'
 );
+const gpxParserSource = fs.readFileSync(
+    path.join(__dirname, 'gpx-parser.js'),
+    'utf8'
+);
 
-// Create a wrapper to execute the code and capture the class
-const wrapper = new Function('global', kmlParserSource + '\nreturn KMLParser;');
-const KMLParser = wrapper(global);
+const kmlWrapper = new Function('global', kmlParserSource + '\nreturn KMLParser;');
+const gpxWrapper = new Function('global', gpxParserSource + '\nreturn GPXParser;');
+const KMLParser = kmlWrapper(global);
+const GPXParser = gpxWrapper(global);
 
-// Make KMLParser available globally
 global.KMLParser = KMLParser;
+global.GPXParser = GPXParser;

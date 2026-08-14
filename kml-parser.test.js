@@ -225,7 +225,8 @@ describe('KMLParser', () => {
             const result = parser.extractGeometries(xmlDoc.documentElement);
             expect(result).toHaveLength(1);
             expect(result[0].type).toBe('Polygon');
-            expect(result[0].coordinates).toHaveLength(4);
+            expect(result[0].outerRings).toHaveLength(1);//dodane przy gpx
+            expect(result[0].outerRings[0]).toHaveLength(4);
         });
 
         test('should extract MultiGeometry', () => {
