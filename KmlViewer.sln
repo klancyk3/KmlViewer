@@ -2,6 +2,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{5C1B6F3D-3A9E-4BDE-9F17-650EA1C0D545}"
+EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "KmlViewer", "KmlViewer.esproj", "{8E55F1E3-9E79-4D06-AAB2-5B764F4A470E}"
 EndProject
 Global
@@ -14,6 +16,10 @@ Global
 		{8E55F1E3-9E79-4D06-AAB2-5B764F4A470E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E55F1E3-9E79-4D06-AAB2-5B764F4A470E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E55F1E3-9E79-4D06-AAB2-5B764F4A470E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C1B6F3D-3A9E-4BDE-9F17-650EA1C0D545}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C1B6F3D-3A9E-4BDE-9F17-650EA1C0D545}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C1B6F3D-3A9E-4BDE-9F17-650EA1C0D545}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C1B6F3D-3A9E-4BDE-9F17-650EA1C0D545}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
