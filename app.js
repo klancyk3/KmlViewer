@@ -70,7 +70,7 @@ async function loadSavedGpxFiles() {
 
         if (allFeatures.length > 0) {
             console.log(`Loaded ${allFeatures.length} GPX features from saved files`);
-            renderer.addFeatures(allFeatures, true);
+            renderer.addFeatures(allFeatures, false);
         }
     } catch (err) {
         console.debug('Saved GPX files are not available:', err);
@@ -271,7 +271,7 @@ async function updateTrailLayer() {
         });
 
         if (features.length > 0) {
-            renderer.addFeatures(features, true);
+            renderer.addFeatures(features, false);
         } else {
             renderer.updateStats();
         }
@@ -619,8 +619,8 @@ updateProgress(0, 'Initializing...');
                         updateProgress(100, 'Ready');
 
                         setTimeout(() => {
-                            renderer.center = { lon: 18.9251, lat: 50.2094 };
-                            renderer.zoom = 10;
+                            renderer.center = { lon: 19.1451, lat: 51.9194 };
+                            renderer.zoom = 6;
                             renderer.requestUpdate();
                             loadingOverlay.classList.add('hidden'); // Hide the loading overlay
                             loadSavedGpxFiles();

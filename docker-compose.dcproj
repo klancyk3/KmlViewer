@@ -6,10 +6,10 @@
     <ProjectGuid>{5C1B6F3D-3A9E-4BDE-9F17-650EA1C0D545}</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceName>kmlviewer</DockerServiceName>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}</DockerServiceUrl>
+    <DockerServiceUrl>http://localhost:5177</DockerServiceUrl>
     <DockerDevelopmentMode>Regular</DockerDevelopmentMode>
     <LaunchBrowser>true</LaunchBrowser>
-    <LaunchUrl>http://localhost:5174</LaunchUrl>
+    <LaunchUrl>http://localhost:5177</LaunchUrl>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.yml" />
