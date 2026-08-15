@@ -3,7 +3,7 @@ class TrailLayerController {
         this.renderer = renderer;
         this.gpxParser = gpxParser;
         this.document = documentRef;
-        this.fetch = fetchRef;
+        this.fetch = (...args) => fetchRef.call(window, ...args);
         this.abortController = null;
     }
 
@@ -35,7 +35,7 @@ class TrailLayerController {
             this.setStatus('Ładowanie szlaków...');
         } catch (err) {
             console.error('Could not load trail regions:', err);
-            this.setRegionPlaceholder('Zrestartuj serwer KmlViewer');
+            this.setRegionPlaceholder('Nie udało się pobrać województw');
             this.setStatus('Endpoint /trail-regions niedostępny');
         }
 
