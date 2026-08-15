@@ -2,6 +2,10 @@
 
 const fs = require('fs');
 const path = require('path');
+const { TextDecoder, TextEncoder } = require('util');
+
+global.TextDecoder = global.TextDecoder || TextDecoder;
+global.TextEncoder = global.TextEncoder || TextEncoder;
 
 const kmlParserSource = fs.readFileSync(
     path.join(__dirname, 'kml-parser.js'),
