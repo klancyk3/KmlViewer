@@ -20,7 +20,7 @@ class TrailLayerController {
 
             if (regions.length === 0) {
                 this.setRegionPlaceholder('Brak województw');
-                this.setStatus('Brak katalogu D:\\Maps\\Gpx');
+                this.setStatus('Brak szlaków w bazie');
                 return;
             }
 
@@ -90,8 +90,8 @@ class TrailLayerController {
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-            const files = await response.json();
-            const { features, totalKm } = this.mapFilesToFeatures(files);
+            const payload = await response.json();
+            const { features, totalKm, sourceCount } = this.mapTrailResponseToFeatures(payload);
 
             if (features.length > 0) {
                 this.renderer.addFeatures(features, false);
@@ -100,7 +100,7 @@ class TrailLayerController {
             }
 
             this.setDistance(totalKm);
-            this.setStatus(`Załadowano ${features.length} obiektów z ${files.length} plików`);
+            this.setStatus(`Załadowano ${features.length} obiektów z ${sourceCount} plików`);
         } catch (err) {
             if (err.name === 'AbortError') return;
 
@@ -109,6 +109,18 @@ class TrailLayerController {
         } finally {
             this.abortController = null;
         }
+    }
+
+    mapTrailResponseToFeatures(payload) {
+        if (Array.isArray(payload)) {
+            return this.mapFilesToFeatures(payload);
+        }
+
+        return {
+            features: payload.features || [],
+            totalKm: payload.totalKm || 0,
+            sourceCount: payload.sourceCount || 0
+        };
     }
 
     mapFilesToFeatures(files) {

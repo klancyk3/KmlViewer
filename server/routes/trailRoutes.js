@@ -1,32 +1,32 @@
 const express = require('express');
-const { SUPPORTED_TRAIL_TYPES } = require('../repositories/trailRepository');
+const { SUPPORTED_TRAIL_TYPES } = require('../repositories/postgisTrailRepository');
 
 function createTrailRouter(trailRepository) {
     const router = express.Router();
 
-    router.get('/trail-regions', (req, res) => {
+    router.get('/trail-regions', async (req, res) => {
         try {
-            res.json(trailRepository.getRegions());
+            res.json(await trailRepository.getRegions());
         } catch (err) {
             console.error('Error reading trail regions:', err);
             res.status(500).send('Error reading trail regions');
         }
     });
 
-    router.get('/trail-gpx', (req, res) => {
+    router.get('/trail-gpx', async (req, res) => {
         const requestedRegions = parseCsv(req.query.regions);
         const requestedTypes = parseCsv(req.query.types)
             .filter(type => SUPPORTED_TRAIL_TYPES.includes(type));
 
         if (requestedRegions.length === 0 || requestedTypes.length === 0) {
-            return res.json([]);
+            return res.json({ features: [], sourceCount: 0, totalKm: 0 });
         }
 
         try {
-            res.json(trailRepository.getFiles(requestedRegions, requestedTypes));
+            res.json(await trailRepository.getFeatures(requestedRegions, requestedTypes));
         } catch (err) {
-            console.error('Error reading trail GPX files:', err);
-            res.status(500).send('Error reading trail GPX files');
+            console.error('Error reading trail features:', err);
+            res.status(500).send('Error reading trail features');
         }
     });
 
