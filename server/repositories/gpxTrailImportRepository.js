@@ -49,7 +49,7 @@ class GpxTrailImportRepository {
              )
              VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8,
-                ST_Length(ST_Transform(ST_GeomFromText($9, 4326), 3857)),
+                ST_Length(ST_GeomFromText($9, 4326)::geography),
                 $10, $11::jsonb, ST_GeomFromText($9, 4326), NOW()
              )
              ON CONFLICT (source_file, segment_index)
