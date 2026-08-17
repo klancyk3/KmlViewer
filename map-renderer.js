@@ -272,6 +272,10 @@ class MapRenderer {
             }
 
             if (!this.isDragging) return;
+            if ((e.buttons & 1) !== 1) {
+                this.isDragging = false;
+                return;
+            }
             const dx = e.clientX - this.lastMouse.x;
             const dy = e.clientY - this.lastMouse.y;
             const newCenter = this.unproject(
@@ -329,6 +333,7 @@ class MapRenderer {
             const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
 
             this.center = { lon, lat };
+            this.notifyZoomChanged();
             this.hideRoutePopup();
             this.requestUpdate();
         }, { passive: false });
@@ -393,6 +398,7 @@ class MapRenderer {
                     // Use logarithmic zoom for smoother feel
                     const zoomDiff = Math.log2(distance / this.lastTouchDistance);
                     this.zoom = Math.max(1, Math.min(22, this.zoom + zoomDiff));
+                    this.notifyZoomChanged();
 
                     // Recenter after zoom to stay on pinch center
                     const newCenterWorld = this.project(centerGeo.lon, centerGeo.lat);
@@ -443,6 +449,7 @@ class MapRenderer {
         const mouseGeo = this.unproject(screenX, screenY);
         const oldZoom = this.zoom;
         this.zoom = Math.min(22, Math.floor(this.zoom + 1));
+        this.notifyZoomChanged();
         
         if (this.zoom !== oldZoom) {
             const newCenterWorld = this.project(mouseGeo.lon, mouseGeo.lat);
@@ -554,13 +561,19 @@ class MapRenderer {
         const feature = hit.feature;
         const routeKind = feature.type === 'user_gpx' ? 'Trasa użytkownika' : 'Szlak';
         const distanceMeters = this.pixelDistanceToMeters(hit.distancePx, clickedGeo.lat);
+        const metadata = feature.metadata || {};
         const rows = [
             ['Typ', routeKind],
             ['Rodzaj', feature.trailType || '-'],
+            ['Route', metadata.route],
+            ['Nazwa OSM', metadata.name],
+            ['Sieć', this.formatTrailNetwork(metadata.network)],
+            ['Kolor', metadata.colour || metadata.color],
+            ['Opis', metadata.description],
             ['Plik', feature.sourceFileName || feature.sourceFile || '-'],
             ['Długość', feature.lengthKm ? `${feature.lengthKm.toFixed(2)} km` : '-'],
             ['Od kliknięcia', `${distanceMeters.toFixed(0)} m`]
-        ];
+        ].filter(([, value]) => value !== undefined && value !== null && value !== '');
 
         this.routeInfoPopup.innerHTML = `
             <button class="close-btn" type="button" aria-label="Zamknij">×</button>
@@ -609,6 +622,17 @@ class MapRenderer {
         return distancePx * metersPerPixel;
     }
 
+    formatTrailNetwork(network) {
+        const labels = {
+            iwn: 'iwn - międzynarodowa piesza',
+            nwn: 'nwn - krajowa piesza',
+            rwn: 'rwn - regionalna piesza',
+            lwn: 'lwn - lokalna piesza'
+        };
+
+        return labels[network] || network;
+    }
+
     escapeHtml(value) {
         return String(value)
             .replace(/&/g, '&amp;')
@@ -630,6 +654,22 @@ class MapRenderer {
             }
 
             this.requestUpdate();
+        }
+    }
+
+    setZoom(zoom) {
+        const nextZoom = Math.max(1, Math.min(22, Number(zoom)));
+        if (!Number.isFinite(nextZoom) || nextZoom === this.zoom) return;
+
+        this.zoom = nextZoom;
+        this.notifyZoomChanged();
+        this.hideRoutePopup();
+        this.requestUpdate();
+    }
+
+    notifyZoomChanged() {
+        if (this.onZoomChanged) {
+            this.onZoomChanged(this.zoom);
         }
     }
 
@@ -739,6 +779,7 @@ class MapRenderer {
 
         this.zoom = Math.min(zoomX, zoomY);
         this.zoom = Math.min(Math.max(this.zoom, 1), 18);
+        this.notifyZoomChanged();
         this.requestUpdate();
     }
 

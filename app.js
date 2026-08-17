@@ -79,15 +79,30 @@ async function loadSavedGpxFiles() {
 }
 
 // Controls
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomValue = document.getElementById('zoomValue');
+
+function syncZoomControls() {
+    if (zoomSlider) zoomSlider.value = renderer.zoom.toFixed(2);
+    if (zoomValue) zoomValue.textContent = renderer.zoom.toFixed(1);
+}
+
+renderer.onZoomChanged = syncZoomControls;
+syncZoomControls();
+
 document.getElementById('zoomInBtn').addEventListener('click', () => {
-    renderer.zoom = Math.min(renderer.zoom + 1, 22);
-    renderer.requestUpdate();
+    renderer.setZoom(renderer.zoom + 1);
 });
 
 document.getElementById('zoomOutBtn').addEventListener('click', () => {
-    renderer.zoom = Math.max(renderer.zoom - 1, 1);
-    renderer.requestUpdate();
+    renderer.setZoom(renderer.zoom - 1);
 });
+
+if (zoomSlider) {
+    zoomSlider.addEventListener('input', (e) => {
+        renderer.setZoom(e.target.value);
+    });
+}
 
 document.getElementById('resetViewBtn').addEventListener('click', () => {
     renderer.fitToData();
@@ -427,7 +442,7 @@ updateProgress(0, 'Initializing...');
 
                         setTimeout(() => {
                             renderer.center = { lon: 19.1451, lat: 51.9194 };
-                            renderer.zoom = 6;
+                            renderer.setZoom(6);
                             renderer.requestUpdate();
                             loadingOverlay.classList.add('hidden'); // Hide the loading overlay
                             loadSavedGpxFiles();

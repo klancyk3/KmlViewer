@@ -39,6 +39,11 @@ describe('PostgisTrailRepository', () => {
                 track_name: 'Blue Trail',
                 length_m: 1234,
                 colour: 'blue',
+                metadata: {
+                    route: 'hiking',
+                    network: 'rwn',
+                    description: '0:50 h / 0:35 h'
+                },
                 geometry: {
                     type: 'LineString',
                     coordinates: [[19, 50], [20, 51]]
@@ -56,6 +61,11 @@ describe('PostgisTrailRepository', () => {
             name: 'slaskie hiking: Blue Trail',
             trailRegion: 'slaskie-260813',
             trailType: 'hiking',
+            metadata: {
+                route: 'hiking',
+                network: 'rwn',
+                description: '0:50 h / 0:35 h'
+            },
             style: {
                 strokeColor: '#2563eb',
                 fillColor: '#2563eb'

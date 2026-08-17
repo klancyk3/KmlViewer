@@ -48,6 +48,7 @@ class PostgisTrailRepository {
                 segment_index,
                 length_m,
                 colour,
+                metadata,
                 ST_AsGeoJSON(geom)::json AS geometry
             FROM gpx_trails
             WHERE region_key = ANY($1)
@@ -70,6 +71,7 @@ class PostgisTrailRepository {
                 sourceFileName: row.source_file_name,
                 segmentIndex: row.segment_index,
                 lengthKm: Number(row.length_m || 0) / 1000,
+                metadata: row.metadata || {},
                 geometries: [{
                     type: 'LineString',
                     coordinates: row.geometry.coordinates.map(([lon, lat]) => ({ lon, lat }))

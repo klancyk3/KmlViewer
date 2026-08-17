@@ -215,7 +215,7 @@ class GpxDirectoryImporter {
 
     getMetadata(node) {
         const metadata = {};
-        ['relation_id', 'route', 'name', 'network', 'operator', 'colour', 'color'].forEach(key => {
+        ['relation_id', 'route', 'name', 'network', 'operator', 'colour', 'color', 'description'].forEach(key => {
             const value = this.getNodeValue(node, key);
             if (value) metadata[key] = value;
         });
