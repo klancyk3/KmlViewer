@@ -1,6 +1,6 @@
 const express = require('express');
 
-function createSavedGpxRouter(savedGpxRepository) {
+function createSavedGpxRouter(savedGpxRepository, userRepository = null) {
     const router = express.Router();
 
     router.post('/save-gpx', (req, res) => {
@@ -15,7 +15,16 @@ function createSavedGpxRouter(savedGpxRepository) {
                 return res.status(500).send('Error saving GPX');
             }
 
-            console.log(`GPX saved: ${filename}`);
+            if (userRepository && req.userContext) {
+                userRepository.logEvent(req.userContext, 'save-gpx', {
+                    filename,
+                    contentLength: content.length
+                }).catch(logErr => {
+                    console.error('Could not log save-gpx event:', logErr);
+                });
+            }
+
+            console.log(`GPX saved: ${filename} by ${req.userContext?.userId || 'unknown user'}`);
             res.send('GPX saved successfully');
         });
     });

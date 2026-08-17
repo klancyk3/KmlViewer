@@ -32,3 +32,29 @@ CREATE TABLE IF NOT EXISTS gpx_trails (
 
 CREATE INDEX IF NOT EXISTS idx_gpx_trails_geom ON gpx_trails USING GIST (geom);
 CREATE INDEX IF NOT EXISTS idx_gpx_trails_region_type ON gpx_trails (region_key, trail_type);
+
+CREATE TABLE IF NOT EXISTS app_users (
+    id UUID PRIMARY KEY,
+    display_name TEXT,
+    first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    first_ip INET,
+    last_ip INET,
+    first_user_agent TEXT,
+    last_user_agent TEXT
+);
+
+CREATE TABLE IF NOT EXISTS app_activity_events (
+    id BIGSERIAL PRIMARY KEY,
+    user_id UUID REFERENCES app_users(id),
+    action TEXT NOT NULL,
+    from_ip INET,
+    user_agent TEXT,
+    path TEXT,
+    method TEXT,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_activity_events_user_created ON app_activity_events (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_app_activity_events_action_created ON app_activity_events (action, created_at DESC);
