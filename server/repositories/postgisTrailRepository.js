@@ -67,6 +67,9 @@ class PostgisTrailRepository {
                 trailRegion: row.region_key,
                 trailType: row.trail_type,
                 sourceFile: row.source_file,
+                sourceFileName: row.source_file_name,
+                segmentIndex: row.segment_index,
+                lengthKm: Number(row.length_m || 0) / 1000,
                 geometries: [{
                     type: 'LineString',
                     coordinates: row.geometry.coordinates.map(([lon, lat]) => ({ lon, lat }))

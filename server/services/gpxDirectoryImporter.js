@@ -21,7 +21,7 @@ class GpxDirectoryImporter {
         const runId = await this.importRepository.createRun(this.sourceDir);
 
         try {
-            const files = this.findGpxFiles(this.sourceDir);
+            const files = this.findActivityFiles(this.sourceDir);
             summary.filesSeen = files.length;
 
             for (const filePath of files) {
@@ -46,19 +46,32 @@ class GpxDirectoryImporter {
         return summary;
     }
 
-    findGpxFiles(directory) {
+    findActivityFiles(directory) {
         if (!fs.existsSync(directory)) return [];
 
         return fs.readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
             const entryPath = path.join(directory, entry.name);
-            if (entry.isDirectory()) return this.findGpxFiles(entryPath);
-            if (entry.isFile() && entry.name.toLowerCase().endsWith('.gpx')) return [entryPath];
+            if (entry.isDirectory()) return this.findActivityFiles(entryPath);
+            if (entry.isFile() && this.isSupportedActivityFile(entry.name)) return [entryPath];
             return [];
         });
     }
 
+    isSupportedActivityFile(fileName) {
+        const lowerName = fileName.toLowerCase();
+        return lowerName.endsWith('.gpx') || lowerName.endsWith('.tcx');
+    }
+
     parseFile(filePath) {
         const xmlDoc = this.parser.parseFromString(fs.readFileSync(filePath, 'utf8'), 'text/xml');
+        if (filePath.toLowerCase().endsWith('.tcx')) {
+            return this.parseTcxFile(filePath, xmlDoc);
+        }
+
+        return this.parseGpxFile(filePath, xmlDoc);
+    }
+
+    parseGpxFile(filePath, xmlDoc) {
         const tracks = this.getElements(xmlDoc, 'trk');
         const routes = this.getElements(xmlDoc, 'rte');
         const context = this.contextOverride || this.getFileContext(filePath);
@@ -120,6 +133,46 @@ class GpxDirectoryImporter {
         return segments;
     }
 
+    parseTcxFile(filePath, xmlDoc) {
+        const activities = this.getElements(xmlDoc, 'Activity');
+        const context = this.contextOverride || this.getFileContext(filePath);
+        const defaultMetadata = this.getMetadata(xmlDoc);
+        const segments = [];
+        let segmentIndex = 0;
+
+        activities.forEach(activity => {
+            const activityName = this.getNodeValue(activity, 'Id') || path.basename(filePath, '.tcx');
+            const metadata = {
+                ...defaultMetadata,
+                ...this.getMetadata(activity),
+                sport: activity.getAttribute('Sport') || undefined
+            };
+
+            this.getElements(activity, 'Track').forEach(track => {
+                const coordinates = this.getElements(track, 'Trackpoint')
+                    .map(point => this.parseTcxTrackpoint(point))
+                    .filter(Boolean);
+
+                if (coordinates.length < 2) return;
+
+                segments.push({
+                    ...context,
+                    sourceFile: this.getSourceFile(filePath),
+                    sourceFileName: path.basename(filePath),
+                    trackName: activityName,
+                    segmentIndex,
+                    pointCount: coordinates.length,
+                    colour: metadata.colour || metadata.color || null,
+                    metadata,
+                    wkt: this.toLineStringWkt(coordinates)
+                });
+                segmentIndex += 1;
+            });
+        });
+
+        return segments;
+    }
+
     getSourceFile(filePath) {
         const relativePath = path.relative(this.sourceDir, filePath).replace(/\\/g, '/');
         return this.sourcePrefix ? `${this.sourcePrefix}/${relativePath}` : relativePath;
@@ -141,6 +194,15 @@ class GpxDirectoryImporter {
     parsePoint(pointNode) {
         const lat = parseFloat(pointNode.getAttribute('lat'));
         const lon = parseFloat(pointNode.getAttribute('lon'));
+
+        if (Number.isNaN(lat) || Number.isNaN(lon)) return null;
+
+        return { lat, lon };
+    }
+
+    parseTcxTrackpoint(trackpointNode) {
+        const lat = parseFloat(this.getNodeValue(trackpointNode, 'LatitudeDegrees'));
+        const lon = parseFloat(this.getNodeValue(trackpointNode, 'LongitudeDegrees'));
 
         if (Number.isNaN(lat) || Number.isNaN(lon)) return null;
 

@@ -95,8 +95,12 @@ document.getElementById('resetViewBtn').addEventListener('click', () => {
 
 // Path Calculation Logic
 let pathPoints = [];
+let pathSelectionMode = false;
+const calcPathBtn = document.getElementById('calcPathBtn');
 
 renderer.onClick = (geo) => {
+    if (!pathSelectionMode) return;
+
     if (pathPoints.length >= 2) {
         pathPoints = [];
         renderer.features = renderer.features.filter(f => f.type !== 'user_path_element');
@@ -117,7 +121,17 @@ renderer.onClick = (geo) => {
     renderer.addFeatures([ptFeature], false);
 };
 
-document.getElementById('calcPathBtn').addEventListener('click', () => {
+calcPathBtn.addEventListener('click', () => {
+    if (!pathSelectionMode) {
+        pathSelectionMode = true;
+        calcPathBtn.classList.add('active');
+        pathPoints = [];
+        renderer.features = renderer.features.filter(f => f.type !== 'user_path_element');
+        renderer.requestUpdate();
+        document.getElementById('pathDistance').textContent = 'Kliknij 2 punkty';
+        return;
+    }
+
     if (pathPoints.length < 2) {
         alert("Please click two points on the map first.");
         return;
@@ -173,6 +187,9 @@ document.getElementById('calcPathBtn').addEventListener('click', () => {
             };
             renderer.addFeatures([lineFeature], false);
         }
+
+        pathSelectionMode = false;
+        calcPathBtn.classList.remove('active');
     });
 });
 

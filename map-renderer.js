@@ -179,6 +179,8 @@ class MapRenderer {
         this.lastTouchDistance = 0;
         this.lastTapTime = 0;
         this.isPinching = false;
+        this.selectedRouteFeature = null;
+        this.routeInfoPopup = document.getElementById('routeInfoPopup');
 
         this.mapSources = {
             standard: {
@@ -278,6 +280,7 @@ class MapRenderer {
             );
             this.center = newCenter;
             this.lastMouse = { x: e.clientX, y: e.clientY };
+            this.hideRoutePopup();
             this.requestUpdate();
         });
 
@@ -290,6 +293,7 @@ class MapRenderer {
                     const mouseX = e.clientX - rect.left;
                     const mouseY = e.clientY - rect.top;
                     const mouseGeo = this.unproject(mouseX, mouseY);
+                    if (this.selectNearestRoute(mouseX, mouseY, mouseGeo)) return;
                     if (this.onClick) {
                         this.onClick(mouseGeo);
                     }
@@ -325,6 +329,7 @@ class MapRenderer {
             const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
 
             this.center = { lon, lat };
+            this.hideRoutePopup();
             this.requestUpdate();
         }, { passive: false });
 
@@ -372,6 +377,7 @@ class MapRenderer {
                 );
                 this.center = newCenter;
                 this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                this.hideRoutePopup();
                 this.requestUpdate();
             } else if (e.touches.length === 2 && this.isPinching) {
                 const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -406,6 +412,7 @@ class MapRenderer {
 
                     this.center = { lon, lat };
                     this.lastTouchDistance = distance;
+                    this.hideRoutePopup();
                     this.requestUpdate();
                 }
             }
@@ -420,6 +427,7 @@ class MapRenderer {
                     const mouseX = e.changedTouches[0].clientX - rect.left;
                     const mouseY = e.changedTouches[0].clientY - rect.top;
                     const mouseGeo = this.unproject(mouseX, mouseY);
+                    if (this.selectNearestRoute(mouseX, mouseY, mouseGeo)) return;
                     if (this.onClick) this.onClick(mouseGeo);
                 }
             }
@@ -451,8 +459,163 @@ class MapRenderer {
             const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
 
             this.center = { lon, lat };
+            this.hideRoutePopup();
             this.requestUpdate();
         }
+    }
+
+    selectNearestRoute(screenX, screenY, clickedGeo) {
+        const hit = this.findNearestRoute(screenX, screenY);
+
+        if (!hit) {
+            this.selectedRouteFeature = null;
+            this.hideRoutePopup();
+            this.requestUpdate();
+            return false;
+        }
+
+        this.selectedRouteFeature = hit.feature;
+        this.showRoutePopup(hit, screenX, screenY, clickedGeo);
+        this.requestUpdate();
+        return true;
+    }
+
+    findNearestRoute(screenX, screenY) {
+        const routeTypes = new Set(['trail_gpx', 'user_gpx']);
+        const centerWorld = this.project(this.center.lon, this.center.lat);
+        const cx = this.canvas.width / 2;
+        const cy = this.canvas.height / 2;
+        const hitThresholdPx = Math.max(10, Math.min(24, 18 - this.zoom * 0.35));
+        let nearest = null;
+
+        this.features.forEach(feature => {
+            if (!routeTypes.has(feature.type)) return;
+
+            feature.geometries.forEach(geom => {
+                if (geom.type !== 'LineString' || !geom.coordinates || geom.coordinates.length < 2) return;
+
+                for (let i = 0; i < geom.coordinates.length - 1; i++) {
+                    const a = this.toScreenPoint(geom.coordinates[i], centerWorld, cx, cy);
+                    const b = this.toScreenPoint(geom.coordinates[i + 1], centerWorld, cx, cy);
+
+                    if (!this.segmentCouldBeVisible(a, b, hitThresholdPx)) continue;
+
+                    const distancePx = this.distanceToSegment(screenX, screenY, a.x, a.y, b.x, b.y);
+                    if (distancePx > hitThresholdPx) continue;
+
+                    if (!nearest || distancePx < nearest.distancePx) {
+                        nearest = { feature, distancePx };
+                    }
+                }
+            });
+        });
+
+        return nearest;
+    }
+
+    toScreenPoint(coord, centerWorld, cx, cy) {
+        const projected = this.project(coord.lon, coord.lat);
+        return {
+            x: projected.x - centerWorld.x + cx,
+            y: projected.y - centerWorld.y + cy
+        };
+    }
+
+    segmentCouldBeVisible(a, b, padding) {
+        const minX = Math.min(a.x, b.x);
+        const maxX = Math.max(a.x, b.x);
+        const minY = Math.min(a.y, b.y);
+        const maxY = Math.max(a.y, b.y);
+
+        return maxX >= -padding
+            && minX <= this.canvas.width + padding
+            && maxY >= -padding
+            && minY <= this.canvas.height + padding;
+    }
+
+    distanceToSegment(px, py, ax, ay, bx, by) {
+        const dx = bx - ax;
+        const dy = by - ay;
+        const lengthSq = dx * dx + dy * dy;
+
+        if (lengthSq === 0) {
+            return Math.hypot(px - ax, py - ay);
+        }
+
+        const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lengthSq));
+        const closestX = ax + t * dx;
+        const closestY = ay + t * dy;
+        return Math.hypot(px - closestX, py - closestY);
+    }
+
+    showRoutePopup(hit, screenX, screenY, clickedGeo) {
+        if (!this.routeInfoPopup) return;
+
+        const feature = hit.feature;
+        const routeKind = feature.type === 'user_gpx' ? 'Trasa użytkownika' : 'Szlak';
+        const distanceMeters = this.pixelDistanceToMeters(hit.distancePx, clickedGeo.lat);
+        const rows = [
+            ['Typ', routeKind],
+            ['Rodzaj', feature.trailType || '-'],
+            ['Plik', feature.sourceFileName || feature.sourceFile || '-'],
+            ['Długość', feature.lengthKm ? `${feature.lengthKm.toFixed(2)} km` : '-'],
+            ['Od kliknięcia', `${distanceMeters.toFixed(0)} m`]
+        ];
+
+        this.routeInfoPopup.innerHTML = `
+            <button class="close-btn" type="button" aria-label="Zamknij">×</button>
+            <h3>${this.escapeHtml(feature.name || routeKind)}</h3>
+            <dl>${rows.map(([label, value]) => `<dt>${this.escapeHtml(label)}</dt><dd>${this.escapeHtml(String(value))}</dd>`).join('')}</dl>
+        `;
+        this.routeInfoPopup.querySelector('.close-btn').addEventListener('click', () => {
+            this.selectedRouteFeature = null;
+            this.hideRoutePopup();
+            this.requestUpdate();
+        });
+
+        this.routeInfoPopup.classList.remove('hidden');
+        this.positionRoutePopup(screenX, screenY);
+    }
+
+    positionRoutePopup(screenX, screenY) {
+        if (!this.routeInfoPopup) return;
+
+        const margin = 12;
+        const offset = 14;
+        const rect = this.routeInfoPopup.getBoundingClientRect();
+        let left = screenX + offset;
+        let top = screenY + offset;
+
+        if (left + rect.width + margin > window.innerWidth) {
+            left = screenX - rect.width - offset;
+        }
+
+        if (top + rect.height + margin > window.innerHeight) {
+            top = screenY - rect.height - offset;
+        }
+
+        this.routeInfoPopup.style.left = `${Math.max(margin, left)}px`;
+        this.routeInfoPopup.style.top = `${Math.max(margin, top)}px`;
+    }
+
+    hideRoutePopup() {
+        if (this.routeInfoPopup) {
+            this.routeInfoPopup.classList.add('hidden');
+        }
+    }
+
+    pixelDistanceToMeters(distancePx, latitude) {
+        const metersPerPixel = 156543.03392 * Math.cos(latitude * Math.PI / 180) / Math.pow(2, this.zoom);
+        return distancePx * metersPerPixel;
+    }
+
+    escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     setMapSource(sourceKey, apiKey = '') {
@@ -902,8 +1065,20 @@ class MapRenderer {
                     }
 
                     const style = feature.style || {};
+                    if (feature === this.selectedRouteFeature) {
+                        this.ctx.save();
+                        this.ctx.strokeStyle = '#facc15';
+                        this.ctx.lineWidth = (style.strokeWidth || 3) + 7;
+                        this.ctx.lineCap = 'round';
+                        this.ctx.lineJoin = 'round';
+                        this.ctx.stroke();
+                        this.ctx.restore();
+                    }
+
                     this.ctx.strokeStyle = style.strokeColor || '#3b82f6';
                     this.ctx.lineWidth = style.strokeWidth || 3;
+                    this.ctx.lineCap = 'round';
+                    this.ctx.lineJoin = 'round';
                     this.ctx.stroke();
                 } else if (geom.type === 'Point') {
                     const p = this.project(geom.coordinates.lon, geom.coordinates.lat);
