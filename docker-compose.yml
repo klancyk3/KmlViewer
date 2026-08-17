@@ -8,11 +8,13 @@ services:
     environment:
       PORT: 5174
       EXTERNAL_GPX_DIR: /maps/gpx
+      USER_GPX_DIR: /maps/user-gpx
       DATABASE_URL: postgres://kmlviewer:kmlviewer@postgres:5432/kmlviewer
     ports:
       - "5174:5174"
     volumes:
       - D:/Maps/Gpx:/maps/gpx:ro
+      - D:/Maps/UserGpx:/maps/user-gpx:ro
       - ./gpxes:/app/gpxes
     depends_on:
       postgres:
@@ -28,9 +30,11 @@ services:
       - import
     environment:
       EXTERNAL_GPX_DIR: /maps/gpx
+      USER_GPX_DIR: /maps/user-gpx
       DATABASE_URL: postgres://kmlviewer:kmlviewer@postgres:5432/kmlviewer
     volumes:
       - D:/Maps/Gpx:/maps/gpx:ro
+      - D:/Maps/UserGpx:/maps/user-gpx:ro
     depends_on:
       postgres:
         condition: service_healthy

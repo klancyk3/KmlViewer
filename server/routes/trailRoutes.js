@@ -30,6 +30,15 @@ function createTrailRouter(trailRepository) {
         }
     });
 
+    router.get('/user-gpx', async (req, res) => {
+        try {
+            res.json(await trailRepository.getUserRoutes());
+        } catch (err) {
+            console.error('Error reading user GPX routes:', err);
+            res.status(500).send('Error reading user GPX routes');
+        }
+    });
+
     return router;
 }
 

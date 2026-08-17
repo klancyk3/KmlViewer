@@ -11,7 +11,7 @@ async function main() {
         throw new Error('DATABASE_URL is required to import GPX files');
     }
 
-    const importer = new GpxDirectoryImporter({
+const importer = new GpxDirectoryImporter({
         sourceDir: config.externalGpxDir,
         importRepository: new GpxTrailImportRepository(database)
     });

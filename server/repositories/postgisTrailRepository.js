@@ -1,4 +1,6 @@
 const SUPPORTED_TRAIL_TYPES = ['foot', 'hiking'];
+const USER_ROUTE_REGION_KEY = 'user-routes';
+const USER_ROUTE_TRAIL_TYPE = 'user';
 
 class PostgisTrailRepository {
     constructor(database) {
@@ -70,9 +72,9 @@ class PostgisTrailRepository {
                     coordinates: row.geometry.coordinates.map(([lon, lat]) => ({ lon, lat }))
                 }],
                 style: {
-                    strokeColor: this.colorNameToCss(row.colour) || (row.trail_type === 'hiking' ? '#22c55e' : '#f97316'),
-                    strokeWidth: row.trail_type === 'hiking' ? 3 : 2,
-                    fillColor: this.colorNameToCss(row.colour) || (row.trail_type === 'hiking' ? '#22c55e' : '#f97316'),
+                    strokeColor: this.colorNameToCss(row.colour) || this.getFallbackColor(row.trail_type),
+                    strokeWidth: row.trail_type === USER_ROUTE_TRAIL_TYPE ? 4 : row.trail_type === 'hiking' ? 3 : 2,
+                    fillColor: this.colorNameToCss(row.colour) || this.getFallbackColor(row.trail_type),
                     radius: 3
                 }
             };
@@ -83,6 +85,15 @@ class PostgisTrailRepository {
             sourceCount: sourceFiles.size,
             totalKm
         };
+    }
+
+    async getUserRoutes() {
+        return this.getFeatures([USER_ROUTE_REGION_KEY], [USER_ROUTE_TRAIL_TYPE]);
+    }
+
+    getFallbackColor(trailType) {
+        if (trailType === USER_ROUTE_TRAIL_TYPE) return '#38bdf8';
+        return trailType === 'hiking' ? '#22c55e' : '#f97316';
     }
 
     colorNameToCss(value) {
@@ -110,4 +121,9 @@ class PostgisTrailRepository {
     }
 }
 
-module.exports = { SUPPORTED_TRAIL_TYPES, PostgisTrailRepository };
+module.exports = {
+    SUPPORTED_TRAIL_TYPES,
+    USER_ROUTE_REGION_KEY,
+    USER_ROUTE_TRAIL_TYPE,
+    PostgisTrailRepository
+};

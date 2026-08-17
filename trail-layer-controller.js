@@ -4,7 +4,8 @@ class TrailLayerController {
         this.gpxParser = gpxParser;
         this.document = documentRef;
         this.fetch = (...args) => fetchRef.call(window, ...args);
-        this.abortController = null;
+        this.trailAbortController = null;
+        this.userRouteAbortController = null;
     }
 
     async initialize() {
@@ -40,18 +41,30 @@ class TrailLayerController {
         }
 
         [controls.enabled, controls.regionSelect, controls.foot, controls.hiking].forEach(el => {
-            el.addEventListener('change', () => this.update());
+            if (el) el.addEventListener('change', () => this.updateTrails());
         });
 
-        if (controls.enabled.checked) {
-            this.update();
+        if (controls.userRoutes) {
+            controls.userRoutes.addEventListener('change', () => this.updateUserRoutes());
+        }
+
+        if (controls.enabled && controls.enabled.checked) {
+            this.updateTrails();
+        }
+
+        if (controls.userRoutes && controls.userRoutes.checked) {
+            this.updateUserRoutes();
         }
     }
 
     async update() {
+        await Promise.all([this.updateTrails(), this.updateUserRoutes()]);
+    }
+
+    async updateTrails() {
         const controls = this.getControls();
         if (!controls.enabled || !controls.enabled.checked) {
-            this.abortCurrentLoad();
+            this.abortCurrentTrailLoad();
             this.removeTrailFeatures();
             this.setDistance(0);
             this.setStatus('Szlaki wyłączone');
@@ -75,8 +88,8 @@ class TrailLayerController {
             return;
         }
 
-        this.abortCurrentLoad();
-        this.abortController = new AbortController();
+        this.abortCurrentTrailLoad();
+        this.trailAbortController = new AbortController();
         this.setStatus('Ładowanie szlaków...');
 
         try {
@@ -85,7 +98,7 @@ class TrailLayerController {
                 types: types.join(',')
             });
             const response = await this.fetch(`/trail-gpx?${params}`, {
-                signal: this.abortController.signal
+                signal: this.trailAbortController.signal
             });
 
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -107,7 +120,59 @@ class TrailLayerController {
             console.error('Could not load trail GPX files:', err);
             this.setStatus('Nie udało się załadować szlaków');
         } finally {
-            this.abortController = null;
+            this.trailAbortController = null;
+        }
+    }
+
+    async updateUserRoutes() {
+        const controls = this.getControls();
+        if (!controls.userRoutes || !controls.userRoutes.checked) {
+            this.abortCurrentUserRouteLoad();
+            this.removeUserRouteFeatures();
+            this.setUserRouteDistance(0);
+            this.setUserRouteStatus('Trasy użytkownika wyłączone');
+            return;
+        }
+
+        this.removeUserRouteFeatures();
+        this.abortCurrentUserRouteLoad();
+        this.userRouteAbortController = new AbortController();
+        this.setUserRouteStatus('Ładowanie tras użytkownika...');
+
+        try {
+            const response = await this.fetch('/user-gpx', {
+                signal: this.userRouteAbortController.signal
+            });
+
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const { features, totalKm, sourceCount } = this.mapTrailResponseToFeatures(await response.json());
+
+            features.forEach(feature => {
+                feature.type = 'user_gpx';
+                feature.style = {
+                    ...feature.style,
+                    strokeColor: feature.style?.strokeColor || '#38bdf8',
+                    strokeWidth: Math.max(feature.style?.strokeWidth || 0, 4),
+                    fillColor: feature.style?.fillColor || '#38bdf8'
+                };
+            });
+
+            if (features.length > 0) {
+                this.renderer.addFeatures(features, false);
+            } else {
+                this.renderer.updateStats();
+            }
+
+            this.setUserRouteDistance(totalKm);
+            this.setUserRouteStatus(`Załadowano ${features.length} obiektów z ${sourceCount} plików`);
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+
+            console.error('Could not load user GPX routes:', err);
+            this.setUserRouteStatus('Nie udało się załadować tras użytkownika');
+        } finally {
+            this.userRouteAbortController = null;
         }
     }
 
@@ -167,10 +232,23 @@ class TrailLayerController {
         this.renderer.requestUpdate();
     }
 
-    abortCurrentLoad() {
-        if (this.abortController) {
-            this.abortController.abort();
-            this.abortController = null;
+    removeUserRouteFeatures() {
+        this.renderer.features = this.renderer.features.filter(feature => feature.type !== 'user_gpx');
+        this.renderer.updateStats();
+        this.renderer.requestUpdate();
+    }
+
+    abortCurrentTrailLoad() {
+        if (this.trailAbortController) {
+            this.trailAbortController.abort();
+            this.trailAbortController = null;
+        }
+    }
+
+    abortCurrentUserRouteLoad() {
+        if (this.userRouteAbortController) {
+            this.userRouteAbortController.abort();
+            this.userRouteAbortController = null;
         }
     }
 
@@ -201,6 +279,16 @@ class TrailLayerController {
         if (distanceEl) distanceEl.textContent = `${kilometers.toFixed(1)} km`;
     }
 
+    setUserRouteStatus(text) {
+        const statusEl = this.document.getElementById('userRouteLayerStatus');
+        if (statusEl) statusEl.textContent = text;
+    }
+
+    setUserRouteDistance(kilometers) {
+        const distanceEl = this.document.getElementById('userRouteDistance');
+        if (distanceEl) distanceEl.textContent = `${kilometers.toFixed(1)} km`;
+    }
+
     setRegionPlaceholder(text) {
         const { regionSelect } = this.getControls();
         if (!regionSelect) return;
@@ -218,7 +306,8 @@ class TrailLayerController {
             enabled: this.document.getElementById('trailsLayerEnabled'),
             regionSelect: this.document.getElementById('trailRegionSelect'),
             foot: this.document.getElementById('trailTypeFoot'),
-            hiking: this.document.getElementById('trailTypeHiking')
+            hiking: this.document.getElementById('trailTypeHiking'),
+            userRoutes: this.document.getElementById('userRoutesLayerEnabled')
         };
     }
 }

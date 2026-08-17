@@ -3,9 +3,11 @@ const path = require('path');
 const { DOMParser } = require('xmldom');
 
 class GpxDirectoryImporter {
-    constructor({ sourceDir, importRepository }) {
+    constructor({ sourceDir, importRepository, sourcePrefix = '', contextOverride = null }) {
         this.sourceDir = sourceDir;
         this.importRepository = importRepository;
+        this.sourcePrefix = sourcePrefix;
+        this.contextOverride = contextOverride;
         this.parser = new DOMParser();
     }
 
@@ -58,7 +60,8 @@ class GpxDirectoryImporter {
     parseFile(filePath) {
         const xmlDoc = this.parser.parseFromString(fs.readFileSync(filePath, 'utf8'), 'text/xml');
         const tracks = this.getElements(xmlDoc, 'trk');
-        const context = this.getFileContext(filePath);
+        const routes = this.getElements(xmlDoc, 'rte');
+        const context = this.contextOverride || this.getFileContext(filePath);
         const defaultMetadata = this.getMetadata(xmlDoc);
         const segments = [];
         let segmentIndex = 0;
@@ -77,7 +80,7 @@ class GpxDirectoryImporter {
 
                 segments.push({
                     ...context,
-                    sourceFile: path.relative(this.sourceDir, filePath).replace(/\\/g, '/'),
+                    sourceFile: this.getSourceFile(filePath),
                     sourceFileName: path.basename(filePath),
                     trackName,
                     segmentIndex,
@@ -90,7 +93,36 @@ class GpxDirectoryImporter {
             });
         });
 
+        routes.forEach(route => {
+            const routeName = this.getNodeValue(route, 'name') || path.basename(filePath, '.gpx');
+            const metadata = { ...defaultMetadata, ...this.getMetadata(route) };
+            const colour = metadata.colour || metadata.color || null;
+            const coordinates = this.getElements(route, 'rtept')
+                .map(point => this.parsePoint(point))
+                .filter(Boolean);
+
+            if (coordinates.length < 2) return;
+
+            segments.push({
+                ...context,
+                sourceFile: this.getSourceFile(filePath),
+                sourceFileName: path.basename(filePath),
+                trackName: routeName,
+                segmentIndex,
+                pointCount: coordinates.length,
+                colour,
+                metadata,
+                wkt: this.toLineStringWkt(coordinates)
+            });
+            segmentIndex += 1;
+        });
+
         return segments;
+    }
+
+    getSourceFile(filePath) {
+        const relativePath = path.relative(this.sourceDir, filePath).replace(/\\/g, '/');
+        return this.sourcePrefix ? `${this.sourcePrefix}/${relativePath}` : relativePath;
     }
 
     getFileContext(filePath) {
