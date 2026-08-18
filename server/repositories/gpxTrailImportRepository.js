@@ -1,6 +1,9 @@
+const { Squadrat } = require('../domain/squadrat');
+
 class GpxTrailImportRepository {
-    constructor(database) {
+    constructor(database, squadratRepository = null) {
         this.database = database;
+        this.squadratRepository = squadratRepository;
     }
 
     async createRun(sourceDir) {
@@ -31,7 +34,7 @@ class GpxTrailImportRepository {
     }
 
     async upsertTrailSegment(segment) {
-        await this.database.query(
+        const result = await this.database.query(
             `INSERT INTO gpx_trails (
                 source_file,
                 source_file_name,
@@ -64,7 +67,8 @@ class GpxTrailImportRepository {
                 colour = EXCLUDED.colour,
                 metadata = EXCLUDED.metadata,
                 geom = EXCLUDED.geom,
-                imported_at = NOW()`,
+                imported_at = NOW()
+             RETURNING id`,
             [
                 segment.sourceFile,
                 segment.sourceFileName,
@@ -79,6 +83,15 @@ class GpxTrailImportRepository {
                 JSON.stringify(segment.metadata || {})
             ]
         );
+
+        if (this.squadratRepository && Array.isArray(segment.coordinates) && segment.coordinates.length > 0) {
+            await this.squadratRepository.saveTrailSquadrats(
+                result.rows[0].id,
+                Squadrat.collectForLineString(segment.coordinates)
+            );
+        }
+
+        return result.rows[0].id;
     }
 }
 

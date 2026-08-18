@@ -98,6 +98,7 @@ class GpxDirectoryImporter {
                     trackName,
                     segmentIndex,
                     pointCount: coordinates.length,
+                    coordinates,
                     colour,
                     metadata,
                     wkt: this.toLineStringWkt(coordinates)
@@ -123,6 +124,7 @@ class GpxDirectoryImporter {
                 trackName: routeName,
                 segmentIndex,
                 pointCount: coordinates.length,
+                coordinates,
                 colour,
                 metadata,
                 wkt: this.toLineStringWkt(coordinates)
@@ -162,6 +164,7 @@ class GpxDirectoryImporter {
                     trackName: activityName,
                     segmentIndex,
                     pointCount: coordinates.length,
+                    coordinates,
                     colour: metadata.colour || metadata.color || null,
                     metadata,
                     wkt: this.toLineStringWkt(coordinates)

@@ -2,6 +2,7 @@ const { createConfig } = require('../server/config');
 const { PostgresDatabase } = require('../server/database/postgresDatabase');
 const { GpxTrailImportRepository } = require('../server/repositories/gpxTrailImportRepository');
 const { USER_ROUTE_REGION_KEY, USER_ROUTE_TRAIL_TYPE } = require('../server/repositories/postgisTrailRepository');
+const { SquadratRepository } = require('../server/repositories/squadratRepository');
 const { GpxDirectoryImporter } = require('../server/services/gpxDirectoryImporter');
 
 async function main() {
@@ -14,7 +15,10 @@ async function main() {
 
     const importer = new GpxDirectoryImporter({
         sourceDir: config.userGpxDir,
-        importRepository: new GpxTrailImportRepository(database),
+        importRepository: new GpxTrailImportRepository(
+            database,
+            new SquadratRepository(database)
+        ),
         sourcePrefix: 'user',
         contextOverride: {
             regionKey: USER_ROUTE_REGION_KEY,
