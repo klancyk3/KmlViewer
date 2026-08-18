@@ -1,6 +1,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 const { default: FitParser } = require('fit-file-parser');
+const { createProgressReporter } = require('./cli-progress');
 
 function printUsage() {
     console.log('Usage: node scripts/convert-fit-to-gpx.js <input-path> [output-dir] [--overwrite]');
@@ -174,8 +175,13 @@ async function main() {
 
     let convertedCount = 0;
     const failures = [];
+    const reporter = createProgressReporter('Convert FIT');
 
-    for (const fitFile of fitFiles) {
+    reporter.update(0, fitFiles.length, 'Preparing files');
+
+    for (let index = 0; index < fitFiles.length; index += 1) {
+        const fitFile = fitFiles[index];
+        reporter.update(index, fitFiles.length, `Processing ${path.basename(fitFile)}`);
         try {
             const outputFile = await convertFile(fitFile, outputDir, overwrite);
             convertedCount += 1;
@@ -185,8 +191,11 @@ async function main() {
             failures.push({ fitFile, message: error.message });
             console.error(`ERR ${path.basename(fitFile)} -> ${error.message}`);
         }
+
+        reporter.update(index + 1, fitFiles.length, `Processed ${path.basename(fitFile)}`);
     }
 
+    reporter.finish(`Converted ${convertedCount}/${fitFiles.length} files`);
     console.log(`Finished: ${convertedCount}/${fitFiles.length} files converted`);
 
     if (failures.length > 0) {

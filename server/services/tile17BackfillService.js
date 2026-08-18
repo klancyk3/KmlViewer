@@ -1,8 +1,9 @@
 const { Tile17 } = require('../domain/tile17');
 
 class Tile17BackfillService {
-    constructor(tile17Repository) {
+    constructor(tile17Repository, onProgress = null) {
         this.tile17Repository = tile17Repository;
+        this.onProgress = onProgress;
     }
 
     async backfill() {
@@ -10,17 +11,26 @@ class Tile17BackfillService {
         let processedTrails = 0;
         let linkedTiles17 = 0;
 
+        this.reportProgress(0, trails.length, 'Preparing trails');
+
         for (const trail of trails) {
             const tiles17 = this.collectTiles17ForGeometry(trail.geometry);
             await this.tile17Repository.saveTrailTiles17(trail.id, tiles17);
             processedTrails += 1;
             linkedTiles17 += tiles17.length;
+            this.reportProgress(processedTrails, trails.length, `Trail ${trail.id}`);
         }
 
         return {
             processedTrails,
             linkedTiles17
         };
+    }
+
+    reportProgress(current, total, detail) {
+        if (typeof this.onProgress === 'function') {
+            this.onProgress({ current, total, detail });
+        }
     }
 
     collectTiles17ForGeometry(geometry) {

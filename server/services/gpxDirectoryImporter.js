@@ -3,11 +3,12 @@ const path = require('path');
 const { DOMParser } = require('xmldom');
 
 class GpxDirectoryImporter {
-    constructor({ sourceDir, importRepository, sourcePrefix = '', contextOverride = null }) {
+    constructor({ sourceDir, importRepository, sourcePrefix = '', contextOverride = null, onProgress = null }) {
         this.sourceDir = sourceDir;
         this.importRepository = importRepository;
         this.sourcePrefix = sourcePrefix;
         this.contextOverride = contextOverride;
+        this.onProgress = onProgress;
         this.parser = new DOMParser();
     }
 
@@ -23,8 +24,11 @@ class GpxDirectoryImporter {
         try {
             const files = this.findActivityFiles(this.sourceDir);
             summary.filesSeen = files.length;
+            this.reportProgress(0, files.length, 'Preparing files');
 
-            for (const filePath of files) {
+            for (let fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
+                const filePath = files[fileIndex];
+                this.reportProgress(fileIndex, files.length, `Processing ${path.basename(filePath)}`);
                 const segments = this.parseFile(filePath);
 
                 for (const segment of segments) {
@@ -35,6 +39,8 @@ class GpxDirectoryImporter {
                 if (segments.length > 0) {
                     summary.filesImported += 1;
                 }
+
+                this.reportProgress(fileIndex + 1, files.length, `Processed ${path.basename(filePath)}`);
             }
         } catch (err) {
             summary.error = err.message;
@@ -44,6 +50,12 @@ class GpxDirectoryImporter {
         }
 
         return summary;
+    }
+
+    reportProgress(current, total, detail) {
+        if (typeof this.onProgress === 'function') {
+            this.onProgress({ current, total, detail });
+        }
     }
 
     findActivityFiles(directory) {

@@ -8,7 +8,7 @@
         "import:user-gpx": "node scripts/import-user-gpx-directory.js",
         "convert:fit": "node scripts/convert-fit-to-gpx.js",
         "backfill:tile17": "node scripts/backfill-trail-tile17.js",
-        "refresh:all": "npm run import:gpx && npm run import:user-gpx && npm run backfill:tile17",
+        "refresh:all": "node scripts/refresh-all.js",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage"

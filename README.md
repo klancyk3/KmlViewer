@@ -33,13 +33,18 @@ Skrypty i serwer korzystają z poniższych zmiennych środowiskowych:
 - `EXTERNAL_GPX_DIR` - katalog z zewnętrznymi plikami GPX, domyślnie `D:\Maps\Gpx`
 - `USER_GPX_DIR` - katalog z trasami użytkownika GPX, domyślnie `D:\Maps\UserGpx`
 
-Przykład w PowerShell:
+Przykład w PowerShell dla uruchamiania lokalnie z Windows:
 
 ```powershell
-$env:DATABASE_URL="postgres://user:password@localhost:5432/kmlviewer"
-$env:DATABASE_URL="postgres://kmlviewer:kmlviewer@postgres:5432/kmlviewer"
+$env:DATABASE_URL="postgres://kmlviewer:kmlviewer@localhost:15433/kmlviewer"
 $env:EXTERNAL_GPX_DIR="D:\Maps\Gpx"
 $env:USER_GPX_DIR="D:\Maps\UserGpx"
+```
+
+Jeśli uruchamiasz aplikację wewnątrz `docker compose`, wtedy host `postgres` jest poprawny:
+
+```text
+postgres://kmlviewer:kmlviewer@postgres:5432/kmlviewer
 ```
 
 ## Uruchomienie aplikacji
@@ -119,6 +124,8 @@ Uruchamia pełny pipeline odświeżenia danych:
 npm run refresh:all
 ```
 
+Przy uruchamianiu z terminala skrypt pokazuje pasek postępu dla całego pipeline'u oraz dla poszczególnych etapów.
+
 ### `npm test`
 
 Uruchamia testy jednostkowe w Jest:
@@ -142,6 +149,18 @@ Uruchamia testy i generuje raport pokrycia:
 ```bash
 npm run test:coverage
 ```
+
+## Paski postępu w PowerShell
+
+Skrypty uruchamiane z terminala pokazują procentowy postęp bieżącego zadania:
+
+- `npm run import:gpx`
+- `npm run import:user-gpx`
+- `npm run convert:fit`
+- `npm run backfill:tile17`
+- `npm run refresh:all`
+
+W przypadku importów i konwersji procent liczony jest względem liczby plików, a przy backfillu względem liczby tras do przetworzenia.
 
 ## Skrypty w katalogu `scripts/`
 
