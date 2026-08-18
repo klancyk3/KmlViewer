@@ -35,10 +35,9 @@ odznaczanie przebytych własnie kwadratów
 wyszukiwanie optymalnej drogi na dane rodzaje tras (rowerowa, biegowa, hardkorowa)
 - połączenie kwadratów i szlaków turystycznych
 - 
-- (Automatyczne calkowite pobieranie bitmap z mapami z roznych stron - (api? gdzie dokumentacja)
 - mapa turystyczna, 
 - maps google
-- mapy.cz)
+- mapy.cz
 
 apka kliencka :
 - notować trasy 

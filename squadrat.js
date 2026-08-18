@@ -1,4 +1,4 @@
-class Squardat {
+class Squadrat {
     constructor(longitude, latitude) {
         this.longitude = Number(longitude);
         this.latitude = Number(latitude);

@@ -83,7 +83,7 @@ const zoomSlider = document.getElementById('zoomSlider');
 const zoomValue = document.getElementById('zoomValue');
 
 function syncZoomControls() {
-    if (zoomSlider) zoomSlider.value = renderer.zoom.toFixed(2);
+    if (zoomSlider) zoomSlider.value = String(renderer.zoom);
     if (zoomValue) zoomValue.textContent = renderer.zoom.toFixed(1);
 }
 
@@ -215,8 +215,8 @@ document.getElementById('layersBtn').addEventListener('click', () => {
     document.getElementById('layersBtn').classList.toggle('active');
 });
 
-['Squadrats', 'Squadrathinos', 'Ubersquadrat', 'Ubersquadratinho'].forEach(key => {
-    const id = 'layer' + key;
+['layerSquadrats', 'layerSquadrathinos', 'layerUbersquadrat', 'layerUbersquadratinho'].forEach(key => {
+    const id = key;
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener('change', (e) => {

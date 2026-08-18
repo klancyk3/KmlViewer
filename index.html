@@ -146,12 +146,28 @@
             <div class="divider"></div>
             <button id="resetViewBtn" class="icon-btn" title="Reset View">⟲</button>
             <div class="divider"></div>
-            <button id="zoomInBtn" class="icon-btn" title="Zoom In">+</button>
-            <label class="zoom-slider-control" title="Zoom">
-                <span id="zoomValue">8.0</span>
-                <input id="zoomSlider" type="range" min="1" max="22" step="0.25" value="8">
-            </label>
             <button id="zoomOutBtn" class="icon-btn" title="Zoom Out">−</button>
+            <label class="zoom-slider-control" title="Zoom">
+                <span class="zoom-slider-label">Zoom</span>
+                <span id="zoomValue">8.0</span>
+                <input id="zoomSlider" type="range" min="1" max="22" step="0.25" value="8" list="zoomTicks">
+                <datalist id="zoomTicks">
+                    <option value="1" label="1"></option>
+                    <option value="6" label="6"></option>
+                    <option value="11" label="11"></option>
+                    <option value="17" label="17"></option>
+                    <option value="22" label="22"></option>
+                </datalist>
+                <div class="zoom-slider-scale" aria-hidden="true">
+                    <span>1</span>
+                    <span>6</span>
+                    <span>11</span>
+                    <span>17</span>
+                    <span>22</span>
+                </div>
+            </label> 
+            <button id="zoomInBtn" class="icon-btn" title="Zoom In">+</button>
+
         </div>
 
         <div id="positionOverlay" style="position: absolute; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #ffffff; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; pointer-events: none; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(12px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
@@ -164,7 +180,7 @@
     <canvas id="mapCanvas"></canvas>
 
     <script src="https://maps.googleapis.com/maps/api/js?v=quarterly&libraries=geometry"></script>
-    <script src="squardat.js"></script>
+    <script src="squadrat.js"></script>
     <script src="kml-parser.js"></script>
     <script src="gpx-parser.js"></script>
     <script src="geo-utils.js"></script>

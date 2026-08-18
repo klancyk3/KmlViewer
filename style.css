@@ -208,23 +208,46 @@ h2 {
 
 .zoom-slider-control {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
-    min-width: 150px;
+    min-width: 170px;
     color: var(--text-secondary);
     font-size: 12px;
     font-variant-numeric: tabular-nums;
 }
 
+.zoom-slider-label {
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
 .zoom-slider-control input {
-    width: 104px;
+    width: 100%;
     accent-color: var(--accent);
     cursor: pointer;
+    margin: 0;
 }
 
 .zoom-slider-control span {
     min-width: 26px;
     text-align: right;
+}
+
+.zoom-slider-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.zoom-slider-scale span {
+    min-width: auto;
+    text-align: center;
 }
 
 .divider {
