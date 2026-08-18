@@ -226,12 +226,16 @@ document.getElementById('layersBtn').addEventListener('click', () => {
     document.getElementById('layersBtn').classList.toggle('active');
 });
 
-['layerSquadrats', 'layerSquadrathinos', 'layerUbersquadrat', 'layerUbersquadratinho'].forEach(key => {
-    const id = key;
+[
+    ['layerSquadrats', 'squadrats'],
+    ['layerSquadrathinos', 'squadrathinos'],
+    ['layerUbersquadrat', 'ubersquadrat'],
+    ['layerUbersquadratinho', 'ubersquadratinho']
+].forEach(([id, layerKey]) => {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener('change', (e) => {
-            renderer.layers[key.toLowerCase()] = e.target.checked;
+            renderer.layers[layerKey] = e.target.checked;
             renderer.requestUpdate();
         });
     }
