@@ -83,9 +83,10 @@ class Tile17Repository {
             if (row.trail_type === 'user') {
                 userRoutes.push({
                     trailId: row.trail_id,
-                    recordedAt: this.resolveRecordedAt(row.track_name, row.imported_at),
+                    activityTime: this.resolveActivityTime(metadata, row.track_name),
                     activityType: metadata.sport || metadata.activityType || metadata.activity_type || 'Unknown',
-                    name: row.track_name || row.source_file_name
+                    name: row.track_name || row.source_file_name,
+                    sourceFileName: row.source_file_name
                 });
                 return;
             }
@@ -124,13 +125,18 @@ class Tile17Repository {
         return colour || metadata.colour || metadata.color || '#94a3b8';
     }
 
-    resolveRecordedAt(trackName, importedAt) {
+    resolveActivityTime(metadata, trackName) {
+        const metadataTime = metadata?.time ? Date.parse(metadata.time) : Number.NaN;
+        if (Number.isFinite(metadataTime)) {
+            return new Date(metadataTime).toISOString();
+        }
+
         const parsedTrackName = Date.parse(trackName);
         if (Number.isFinite(parsedTrackName)) {
             return new Date(parsedTrackName).toISOString();
         }
-
-        return importedAt ? new Date(importedAt).toISOString() : null;
+        
+        return null;
     }
 
     async saveTrailTiles17(trailId, tiles17) {

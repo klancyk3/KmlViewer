@@ -35,6 +35,7 @@ describe('GpxDirectoryImporter', () => {
         fs.mkdirSync(gpxDir, { recursive: true });
         fs.writeFileSync(path.join(gpxDir, 'trail.gpx'), `<gpx xmlns:osmt="https://openstreetmap.org/trails">
             <metadata>
+                <time>2026-08-17T06:30:00Z</time>
                 <osmt:relation_id>123</osmt:relation_id>
                 <osmt:colour>blue</osmt:colour>
             </metadata>
@@ -70,7 +71,12 @@ describe('GpxDirectoryImporter', () => {
             trackName: 'Blue Trail',
             segmentIndex: 0,
             pointCount: 2,
-            colour: 'blue'
+            colour: 'blue',
+            metadata: {
+                relation_id: '123',
+                colour: 'blue',
+                time: '2026-08-17T06:30:00Z'
+            }
         });
         expect(repository.segments[0].wkt).toBe('LINESTRING(19 50,20 51)');
     });

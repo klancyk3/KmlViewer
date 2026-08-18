@@ -199,7 +199,7 @@ function renderTile17PreviewDetails(payload, selectedTile) {
     userRoutesContainer.innerHTML = userRoutes.length > 0
         ? userRoutes.map(route => `
             <button class="tile-popup-item" type="button" data-trail-id="${route.trailId}">
-                <span class="tile-popup-text">${escapeHtml(formatShortDate(route.recordedAt))} · ${escapeHtml(route.activityType || 'Unknown')}</span>
+                <span class="tile-popup-text">${escapeHtml(formatShortDate(route.activityTime))} · ${escapeHtml(route.activityType || 'Unknown')} · ${escapeHtml(route.sourceFileName || 'Brak pliku')}</span>
             </button>
         `).join('')
         : '<div class="tile-popup-empty">Brak tras użytkownika</div>';
@@ -223,9 +223,17 @@ async function highlightTrailTiles(trailId) {
 
         const payload = await response.json();
         renderer.setHighlightedRouteTiles(payload.records || []);
+        highlightRouteFeature(trailId);
     } catch (err) {
         console.error('Failed to highlight route tiles:', err);
     }
+}
+
+function highlightRouteFeature(trailId) {
+    const feature = renderer.features.find(item => item.trailId === trailId);
+    renderer.selectedRouteFeature = feature || null;
+    renderer.selectedRouteStrokeColor = feature?.type === 'user_gpx' ? '#166534' : null;
+    renderer.requestUpdate();
 }
 
 function formatShortDate(value) {
@@ -261,6 +269,8 @@ function clearTilePreviewDetails() {
     if (container) container.classList.add('hidden');
 
     renderer.setHighlightedRouteTiles([]);
+    renderer.selectedRouteFeature = null;
+    renderer.selectedRouteStrokeColor = null;
 }
 
 calcPathBtn.addEventListener('click', () => {

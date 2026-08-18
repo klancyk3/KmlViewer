@@ -215,6 +215,7 @@ class MapRenderer {
         this.lastTapTime = 0;
         this.isPinching = false;
         this.selectedRouteFeature = null;
+        this.selectedRouteStrokeColor = null;
         this.selectedTileZoom = null;
         this.selectedTile = null;
         this.tile17Records = [];
@@ -1263,7 +1264,7 @@ class MapRenderer {
                     const style = feature.style || {};
                     if (feature === this.selectedRouteFeature) {
                         this.ctx.save();
-                        this.ctx.strokeStyle = '#facc15';
+                        this.ctx.strokeStyle = this.selectedRouteStrokeColor || '#facc15';
                         this.ctx.lineWidth = (style.strokeWidth || 3) + 7;
                         this.ctx.lineCap = 'round';
                         this.ctx.lineJoin = 'round';
