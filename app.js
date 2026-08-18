@@ -124,6 +124,9 @@ const calcPathBtn = document.getElementById('calcPathBtn');
 renderer.onClick = (geo) => {
     if (renderer.selectedTileZoom !== null) {
         renderer.setSelectedTileFromGeo(geo);
+        if (renderer.selectedTileZoom === 17 && renderer.selectedTile) {
+            showTile17PopupForSelection();
+        }
     }
 
     if (!pathSelectionMode) return;
@@ -147,6 +150,114 @@ renderer.onClick = (geo) => {
     };
     renderer.addFeatures([ptFeature], false);
 };
+
+async function showTile17PopupForSelection() {
+    const selectedTile = renderer.selectedTile;
+    if (!selectedTile || selectedTile.z !== 17) return;
+
+    try {
+        const params = new URLSearchParams({
+            indexWe: String(selectedTile.x),
+            indexNe: String(selectedTile.y),
+            zoom: String(selectedTile.z)
+        });
+        const response = await fetch(`/tile17-details?${params.toString()}`);
+        if (!response.ok) {
+            throw new Error(`Tile17 details request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        renderTile17Popup(payload, selectedTile);
+    } catch (err) {
+        console.error('Failed to load Tile17 popup details:', err);
+    }
+}
+
+function renderTile17Popup(payload, selectedTile) {
+    const popup = document.getElementById('routeInfoPopup');
+    if (!popup) return;
+
+    const trails = Array.isArray(payload.trails) ? payload.trails : [];
+    const userRoutes = Array.isArray(payload.userRoutes) ? payload.userRoutes : [];
+
+    popup.innerHTML = `
+        <button class="close-btn" type="button" aria-label="Zamknij">×</button>
+        <h3>Tile Z17: ${selectedTile.x}, ${selectedTile.y}</h3>
+        <div class="tile-popup-section">
+            <div class="tile-popup-title">Szlaki</div>
+            <div class="tile-popup-list">
+                ${trails.length > 0 ? trails.map(trail => `
+                    <button class="tile-popup-item" type="button" data-trail-id="${trail.trailId}">
+                        <span class="tile-popup-color" style="background:${escapeHtml(trail.color || '#94a3b8')}"></span>
+                        <span class="tile-popup-text">${escapeHtml(trail.name || 'Bez nazwy')}</span>
+                    </button>
+                `).join('') : '<div class="tile-popup-empty">Brak szlaków</div>'}
+            </div>
+        </div>
+        <div class="tile-popup-section">
+            <div class="tile-popup-title">Trasy użytkownika</div>
+            <div class="tile-popup-list">
+                ${userRoutes.length > 0 ? userRoutes.map(route => `
+                    <button class="tile-popup-item" type="button" data-trail-id="${route.trailId}">
+                        <span class="tile-popup-text">${escapeHtml(formatShortDate(route.recordedAt))} · ${escapeHtml(route.activityType || 'Unknown')}</span>
+                    </button>
+                `).join('') : '<div class="tile-popup-empty">Brak tras użytkownika</div>'}
+            </div>
+        </div>
+    `;
+
+    popup.querySelector('.close-btn').addEventListener('click', () => {
+        popup.classList.add('hidden');
+        renderer.setHighlightedRouteTiles([]);
+    });
+
+    popup.querySelectorAll('[data-trail-id]').forEach(button => {
+        button.addEventListener('click', async () => {
+            const trailId = Number.parseInt(button.dataset.trailId, 10);
+            if (!Number.isInteger(trailId)) return;
+            await highlightTrailTiles(trailId);
+        });
+    });
+
+    popup.classList.remove('hidden');
+    popup.style.left = '24px';
+    popup.style.top = '24px';
+}
+
+async function highlightTrailTiles(trailId) {
+    try {
+        const response = await fetch(`/trail-tiles17?trailId=${trailId}`);
+        if (!response.ok) {
+            throw new Error(`Trail Tile17 request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        renderer.setHighlightedRouteTiles(payload.records || []);
+    } catch (err) {
+        console.error('Failed to highlight route tiles:', err);
+    }
+}
+
+function formatShortDate(value) {
+    if (!value) return 'Brak daty';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return 'Brak daty';
+
+    return new Intl.DateTimeFormat('pl-PL', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(parsed);
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 calcPathBtn.addEventListener('click', () => {
     if (!pathSelectionMode) {

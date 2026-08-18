@@ -77,6 +77,7 @@ class PostgisTrailRepository {
             totalKm += Number(row.length_m || 0) / 1000;
 
             return {
+                trailId: row.id,
                 type: 'trail_gpx',
                 name: `${row.region_name} ${row.trail_type}: ${row.track_name || row.source_file_name}`,
                 trailRegion: row.region_key,

@@ -441,6 +441,61 @@ h2 {
     overflow-wrap: anywhere;
 }
 
+.tile-popup-section {
+    margin-top: 12px;
+}
+
+.tile-popup-title {
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tile-popup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tile-popup-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+}
+
+.tile-popup-item:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.tile-popup-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+}
+
+.tile-popup-text {
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.tile-popup-empty {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 4px 2px;
+}
+
 .route-info-popup .close-btn {
     position: absolute;
     top: 6px;

@@ -52,6 +52,87 @@ class Tile17Repository {
         return result.rows;
     }
 
+    async getTileDetails(indexWe, indexNe) {
+        const result = await this.database.query(
+            `SELECT
+                gt.id AS trail_id,
+                gt.trail_type,
+                gt.track_name,
+                gt.source_file_name,
+                gt.imported_at,
+                gt.colour,
+                gt.metadata
+             FROM "Tiles17" t
+             JOIN "gpx_trail_Tiles17" gt17 ON gt17.tile17_id = t.id
+             JOIN gpx_trails gt ON gt.id = gt17.trail_id
+             WHERE t.index_we = $1
+               AND t.index_ne = $2
+             ORDER BY
+                CASE WHEN gt.trail_type = 'user' THEN 1 ELSE 0 END,
+                gt.track_name,
+                gt.source_file_name`,
+            [indexWe, indexNe]
+        );
+
+        const trails = [];
+        const userRoutes = [];
+
+        result.rows.forEach(row => {
+            const metadata = row.metadata || {};
+
+            if (row.trail_type === 'user') {
+                userRoutes.push({
+                    trailId: row.trail_id,
+                    recordedAt: this.resolveRecordedAt(row.track_name, row.imported_at),
+                    activityType: metadata.sport || metadata.activityType || metadata.activity_type || 'Unknown',
+                    name: row.track_name || row.source_file_name
+                });
+                return;
+            }
+
+            trails.push({
+                trailId: row.trail_id,
+                name: row.track_name || row.source_file_name,
+                color: this.resolveTrailColor(row.colour, metadata)
+            });
+        });
+
+        return { trails, userRoutes };
+    }
+
+    async getTilesForTrail(trailId) {
+        const result = await this.database.query(
+            `SELECT
+                t.id,
+                t.index_ne,
+                t.index_we,
+                t.min_lon,
+                t.max_lon,
+                t.min_lat,
+                t.max_lat
+             FROM "Tiles17" t
+             JOIN "gpx_trail_Tiles17" gt17 ON gt17.tile17_id = t.id
+             WHERE gt17.trail_id = $1
+             ORDER BY t.index_ne, t.index_we`,
+            [trailId]
+        );
+
+        return result.rows;
+    }
+
+    resolveTrailColor(colour, metadata) {
+        return colour || metadata.colour || metadata.color || '#94a3b8';
+    }
+
+    resolveRecordedAt(trackName, importedAt) {
+        const parsedTrackName = Date.parse(trackName);
+        if (Number.isFinite(parsedTrackName)) {
+            return new Date(parsedTrackName).toISOString();
+        }
+
+        return importedAt ? new Date(importedAt).toISOString() : null;
+    }
+
     async saveTrailTiles17(trailId, tiles17) {
         await this.database.withTransaction(async client => {
             await client.query('DELETE FROM "gpx_trail_Tiles17" WHERE trail_id = $1', [trailId]);

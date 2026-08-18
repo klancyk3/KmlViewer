@@ -59,6 +59,38 @@ function createTrailRouter(trailRepository, tile17Repository) {
         }
     });
 
+    router.get('/tile17-details', async (req, res) => {
+        const indexWe = Number.parseInt(req.query.indexWe, 10);
+        const indexNe = Number.parseInt(req.query.indexNe, 10);
+        const zoom = Number.parseInt(req.query.zoom, 10);
+
+        if (!Number.isInteger(indexWe) || !Number.isInteger(indexNe) || zoom !== 17) {
+            return res.json({ trails: [], userRoutes: [] });
+        }
+
+        try {
+            res.json(await tile17Repository.getTileDetails(indexWe, indexNe));
+        } catch (err) {
+            console.error('Error reading Tile17 details:', err);
+            res.status(500).send('Error reading Tile17 details');
+        }
+    });
+
+    router.get('/trail-tiles17', async (req, res) => {
+        const trailId = Number.parseInt(req.query.trailId, 10);
+
+        if (!Number.isInteger(trailId)) {
+            return res.json({ records: [] });
+        }
+
+        try {
+            res.json({ records: await tile17Repository.getTilesForTrail(trailId) });
+        } catch (err) {
+            console.error('Error reading trail Tile17 records:', err);
+            res.status(500).send('Error reading trail Tile17 records');
+        }
+    });
+
     return router;
 }
 

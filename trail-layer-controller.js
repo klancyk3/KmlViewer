@@ -60,7 +60,11 @@ class TrailLayerController {
             this.updateUserRoutes();
         }
 
+        const previousViewportChanged = this.renderer.onViewportChanged;
         this.renderer.onViewportChanged = () => {
+            if (typeof previousViewportChanged === 'function') {
+                previousViewportChanged();
+            }
             this.scheduleViewportRefresh();
         };
     }
