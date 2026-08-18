@@ -180,6 +180,8 @@ class MapRenderer {
         this.lastTapTime = 0;
         this.isPinching = false;
         this.selectedRouteFeature = null;
+        this.selectedTileZoom = null;
+        this.selectedTile = null;
         this.routeInfoPopup = document.getElementById('routeInfoPopup');
 
         this.mapSources = {
@@ -297,10 +299,11 @@ class MapRenderer {
                     const mouseX = e.clientX - rect.left;
                     const mouseY = e.clientY - rect.top;
                     const mouseGeo = this.unproject(mouseX, mouseY);
-                    if (this.selectNearestRoute(mouseX, mouseY, mouseGeo)) return;
+                    const routeSelected = this.selectNearestRoute(mouseX, mouseY, mouseGeo);
                     if (this.onClick) {
                         this.onClick(mouseGeo);
                     }
+                    if (routeSelected) return;
                 }
             }
             this.isDragging = false;
@@ -433,8 +436,9 @@ class MapRenderer {
                     const mouseX = e.changedTouches[0].clientX - rect.left;
                     const mouseY = e.changedTouches[0].clientY - rect.top;
                     const mouseGeo = this.unproject(mouseX, mouseY);
-                    if (this.selectNearestRoute(mouseX, mouseY, mouseGeo)) return;
+                    const routeSelected = this.selectNearestRoute(mouseX, mouseY, mouseGeo);
                     if (this.onClick) this.onClick(mouseGeo);
+                    if (routeSelected) return;
                 }
             }
             this.isDragging = false;
@@ -667,6 +671,31 @@ class MapRenderer {
         this.requestUpdate();
     }
 
+    setSelectedTileZoom(zoom) {
+        if (zoom === '' || zoom === null || zoom === undefined) {
+            this.selectedTileZoom = null;
+            this.selectedTile = null;
+            this.requestUpdate();
+            return;
+        }
+
+        const nextZoom = Math.max(1, Math.min(22, Number(zoom)));
+        if (!Number.isFinite(nextZoom)) return;
+
+        this.selectedTileZoom = nextZoom;
+        this.selectedTile = null;
+        this.requestUpdate();
+    }
+
+    setSelectedTileFromGeo(geo, zoom = this.selectedTileZoom) {
+        if (!geo || zoom === null || zoom === undefined) return;
+
+        const tileX = Math.floor(this.tileSystem.lon2tile(geo.lon, zoom));
+        const tileY = Math.floor(this.tileSystem.lat2tile(geo.lat, zoom));
+        this.selectedTile = { x: tileX, y: tileY, z: zoom };
+        this.requestUpdate();
+    }
+
     notifyZoomChanged() {
         if (this.onZoomChanged) {
             this.onZoomChanged(this.zoom);
@@ -883,6 +912,32 @@ class MapRenderer {
                 });
             }
         };
+
+        if (this.selectedRouteFeature) {
+            const selectedRouteTilesZ14 = this.yardCalc.getVisitedTiles([this.selectedRouteFeature], 14);
+            const selectedRouteTilesZ17 = this.yardCalc.getVisitedTiles([this.selectedRouteFeature], 17);
+
+            drawVisitedTiles(selectedRouteTilesZ14, 14, 'rgba(59, 130, 246, 0.22)');
+            drawVisitedTiles(selectedRouteTilesZ17, 17, 'rgba(16, 185, 129, 0.32)');
+        }
+
+        if (this.selectedTile) {
+            const { x, y, z } = this.selectedTile;
+            const topLeft = this.project(this.tileSystem.tile2lon(x, z), this.tileSystem.tile2lat(y, z));
+            const bottomRight = this.project(this.tileSystem.tile2lon(x + 1, z), this.tileSystem.tile2lat(y + 1, z));
+            const sx = topLeft.x - centerWorld.x + cx;
+            const sy = topLeft.y - centerWorld.y + cy;
+            const w = bottomRight.x - topLeft.x;
+            const h = bottomRight.y - topLeft.y;
+
+            this.ctx.save();
+            this.ctx.fillStyle = 'rgba(244, 114, 182, 0.18)';
+            this.ctx.strokeStyle = 'rgba(244, 114, 182, 0.95)';
+            this.ctx.lineWidth = 2;
+            this.ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
+            this.ctx.strokeRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
+            this.ctx.restore();
+        }
 
         // --- Draw Grid Overlays ---
         // Helper to draw grid for a specific target zoom Level Z

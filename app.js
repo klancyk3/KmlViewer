@@ -81,6 +81,7 @@ async function loadSavedGpxFiles() {
 // Controls
 const zoomSlider = document.getElementById('zoomSlider');
 const zoomValue = document.getElementById('zoomValue');
+const tileZoomSelect = document.getElementById('tileZoomSelect');
 
 function syncZoomControls() {
     if (zoomSlider) zoomSlider.value = String(renderer.zoom);
@@ -104,6 +105,12 @@ if (zoomSlider) {
     });
 }
 
+if (tileZoomSelect) {
+    tileZoomSelect.addEventListener('change', (e) => {
+        renderer.setSelectedTileZoom(e.target.value);
+    });
+}
+
 document.getElementById('resetViewBtn').addEventListener('click', () => {
     renderer.fitToData();
 });
@@ -114,6 +121,10 @@ let pathSelectionMode = false;
 const calcPathBtn = document.getElementById('calcPathBtn');
 
 renderer.onClick = (geo) => {
+    if (renderer.selectedTileZoom !== null) {
+        renderer.setSelectedTileFromGeo(geo);
+    }
+
     if (!pathSelectionMode) return;
 
     if (pathPoints.length >= 2) {
