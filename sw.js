@@ -1,6 +1,7 @@
-const CACHE_NAME = 'kml-viewer-v15';
+const APP_CACHE = 'kml-viewer-app-v16';
 const MAP_CACHE = 'osm-map-tiles-v2';
-const ASSETS = [
+const FONT_CACHE = 'kml-viewer-fonts-v1';
+const APP_SHELL = [
     './',
     './index.html',
     './style.css',
@@ -10,81 +11,98 @@ const ASSETS = [
     './geo-utils.js',
     './trail-layer-controller.js',
     './map-renderer.js',
+    './squadrat.js',
     './sample.kml',
     './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+        caches.open(APP_CACHE).then((cache) => cache.addAll(APP_SHELL))
     );
     self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+    const keepCaches = new Set([APP_CACHE, MAP_CACHE, FONT_CACHE]);
+
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((name) => {
-                    if (name !== CACHE_NAME && name !== MAP_CACHE) {
-                        return caches.delete(name);
-                    }
-                })
-            );
-        })
+        caches.keys().then((cacheNames) => Promise.all(
+            cacheNames.map((name) => {
+                if (!keepCaches.has(name)) {
+                    return caches.delete(name);
+                }
+                return undefined;
+            })
+        ))
     );
     self.clients.claim();
 });
 
+function isAppShellRequest(url) {
+    return url.origin === self.location.origin
+        && (
+            url.pathname === '/'
+            || url.pathname.endsWith('/index.html')
+            || url.pathname.endsWith('.js')
+            || url.pathname.endsWith('.css')
+            || url.pathname.endsWith('.json')
+            || url.pathname.endsWith('.html')
+            || url.pathname.endsWith('.png')
+            || url.pathname.endsWith('.svg')
+            || url.pathname.endsWith('.ico')
+        );
+}
+
 self.addEventListener('fetch', (event) => {
+    if (event.request.method !== 'GET') return;
+
     const url = new URL(event.request.url);
 
-    // Handle map tiles
     if (url.hostname === 'tile.openstreetmap.org') {
         event.respondWith(
-            caches.open(MAP_CACHE).then((cache) => {
-                return cache.match(event.request).then((response) => {
-                    if (response) {
-                        return response;
-                    }
-                    return fetch(event.request).then((networkResponse) => {
-                        cache.put(event.request, networkResponse.clone());
-                        return networkResponse;
-                    }).catch(() => {
-                        // Return empty response on failure to not break images
-                        return new Response('', { status: 404, statusText: 'Not Found' });
-                    });
-                });
-            })
+            caches.open(MAP_CACHE).then((cache) => cache.match(event.request).then((response) => {
+                if (response) {
+                    return response;
+                }
+
+                return fetch(event.request).then((networkResponse) => {
+                    cache.put(event.request, networkResponse.clone());
+                    return networkResponse;
+                }).catch(() => new Response('', { status: 404, statusText: 'Not Found' }));
+            }))
         );
         return;
     }
 
-    // Handle Google Fonts
     if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
         event.respondWith(
-            caches.match(event.request).then((response) => {
-                return response || fetch(event.request).then((networkResponse) => {
-                    return caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, networkResponse.clone());
-                        return networkResponse;
-                    });
-                }).catch(() => {
-                    // Fail silently
-                    return new Response('', { status: 404, statusText: 'Not Found' });
+            caches.open(FONT_CACHE).then((cache) => cache.match(event.request).then((response) => {
+                const networkFetch = fetch(event.request).then((networkResponse) => {
+                    cache.put(event.request, networkResponse.clone());
+                    return networkResponse;
                 });
-            })
+
+                return response || networkFetch;
+            })).catch(() => new Response('', { status: 404, statusText: 'Not Found' }))
         );
         return;
     }
 
-    // Default cache-first for other assets
+    if (isAppShellRequest(url)) {
+        event.respondWith(
+            fetch(event.request).then((networkResponse) => {
+                const responseClone = networkResponse.clone();
+                caches.open(APP_CACHE).then((cache) => cache.put(event.request, responseClone));
+                return networkResponse;
+            }).catch(() => caches.match(event.request).then((cachedResponse) => (
+                cachedResponse || caches.match('./index.html')
+            )))
+        );
+        return;
+    }
+
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request).catch(() => {
-                // Return empty response on failure
-                return new Response('', { status: 503, statusText: 'Service Unavailable' });
-            });
-        })
+        fetch(event.request).catch(() => caches.match(event.request))
     );
 });

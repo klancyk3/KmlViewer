@@ -75,6 +75,7 @@ async function loadSavedGpxFiles() {
         }
     } catch (err) {
         console.debug('Saved GPX files are not available:', err);
+        // Saved GPX storage is optional during local development.
     }
 }
 
@@ -163,60 +164,25 @@ calcPathBtn.addEventListener('click', () => {
         return;
     }
 
-    if (!window.google || !window.google.maps || !window.google.maps.DirectionsService) {
-        alert("Google Maps API is not loaded.");
-        return;
-    }
+    const straightDistanceKm = GeoUtils.distanceBetweenKm(pathPoints[0], pathPoints[1]);
+    document.getElementById('pathDistance').textContent = `${straightDistanceKm.toFixed(2)} km (Straight)`;
 
-    const p1 = new google.maps.LatLng(pathPoints[0].lat, pathPoints[0].lon);
-    const p2 = new google.maps.LatLng(pathPoints[1].lat, pathPoints[1].lon);
-
-    const ds = new google.maps.DirectionsService();
-    ds.route({
-        origin: p1,
-        destination: p2,
-        travelMode: google.maps.TravelMode.DRIVING
-    }, (response, status) => {
-        if (status === 'OK') {
-            const leg = response.routes[0].legs[0];
-            document.getElementById('pathDistance').textContent = leg.distance.text;
-
-            const path = response.routes[0].overview_path;
-            const lineFeature = {
-                name: 'User Path Line',
-                type: 'user_path_element',
-                geometries: [{
-                    type: 'LineString',
-                    coordinates: path.map(ll => ({ lat: ll.lat(), lon: ll.lng() }))
-                }],
-                style: {
-                    strokeColor: '#f59e0b',
-                    strokeWidth: 4
-                }
-            };
-            renderer.addFeatures([lineFeature], false);
-        } else {
-            const distMeters = google.maps.geometry.spherical.computeDistanceBetween(p1, p2);
-            document.getElementById('pathDistance').textContent = (distMeters / 1000).toFixed(2) + ' km (Straight)';
-
-            const lineFeature = {
-                name: 'User Path Line Straight',
-                type: 'user_path_element',
-                geometries: [{
-                    type: 'LineString',
-                    coordinates: [ pathPoints[0], pathPoints[1] ]
-                }],
-                style: {
-                    strokeColor: '#ef4444',
-                    strokeWidth: 4
-                }
-            };
-            renderer.addFeatures([lineFeature], false);
+    const lineFeature = {
+        name: 'User Path Line Straight',
+        type: 'user_path_element',
+        geometries: [{
+            type: 'LineString',
+            coordinates: [pathPoints[0], pathPoints[1]]
+        }],
+        style: {
+            strokeColor: '#ef4444',
+            strokeWidth: 4
         }
+    };
+    renderer.addFeatures([lineFeature], false);
 
-        pathSelectionMode = false;
-        calcPathBtn.classList.remove('active');
-    });
+    pathSelectionMode = false;
+    calcPathBtn.classList.remove('active');
 });
 
 // Layers Handlers

@@ -58,6 +58,41 @@ class YardCalculator {
         this.tileSystem = new TileSystem();
     }
 
+    getCoordinateTiles(features, zoom) {
+        const visited = new Set();
+        const add = (lon, lat) => {
+            const x = Math.floor(this.tileSystem.lon2tile(lon, zoom));
+            const y = Math.floor(this.tileSystem.lat2tile(lat, zoom));
+            visited.add(`${x},${y}`);
+        };
+
+        features.forEach(feature => {
+            feature.geometries.forEach(geom => {
+                if (geom.type === 'Point' && geom.coordinates) {
+                    add(geom.coordinates.lon, geom.coordinates.lat);
+                    return;
+                }
+
+                if (geom.type === 'LineString' && Array.isArray(geom.coordinates)) {
+                    geom.coordinates.forEach(coord => add(coord.lon, coord.lat));
+                    return;
+                }
+
+                if (geom.type === 'Polygon') {
+                    if (Array.isArray(geom.outerRings)) {
+                        geom.outerRings.forEach(ring => ring.forEach(coord => add(coord.lon, coord.lat)));
+                    }
+
+                    if (Array.isArray(geom.innerRings)) {
+                        geom.innerRings.forEach(ring => ring.forEach(coord => add(coord.lon, coord.lat)));
+                    }
+                }
+            });
+        });
+
+        return visited;
+    }
+
     // Rasterize features to a Set of "x,y" tile coordinates at given zoom
     getVisitedTiles(features, zoom) {
         const visited = new Set();
@@ -914,11 +949,11 @@ class MapRenderer {
         };
 
         if (this.selectedRouteFeature) {
-            const selectedRouteTilesZ14 = this.yardCalc.getVisitedTiles([this.selectedRouteFeature], 14);
-            const selectedRouteTilesZ17 = this.yardCalc.getVisitedTiles([this.selectedRouteFeature], 17);
+            //const selectedRouteTilesZ14 = this.yardCalc.getCoordinateTiles([this.selectedRouteFeature], 14);
+            const selectedRouteTilesZ17 = this.yardCalc.getCoordinateTiles([this.selectedRouteFeature], 17);
 
-            drawVisitedTiles(selectedRouteTilesZ14, 14, 'rgba(59, 130, 246, 0.22)');
-            drawVisitedTiles(selectedRouteTilesZ17, 17, 'rgba(16, 185, 129, 0.32)');
+            //drawVisitedTiles(selectedRouteTilesZ14, 14, 'rgba(245, 158, 11, 0.24)');
+            drawVisitedTiles(selectedRouteTilesZ17, 17, 'rgba(14, 165, 233, 0.34)');
         }
 
         if (this.selectedTile) {
