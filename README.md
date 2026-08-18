@@ -2,13 +2,60 @@
 
 Lekka aplikacja do przeglądania i analizy tras GPS oraz danych mapowych. Projekt zawiera frontend do podglądu danych, serwer Node.js oraz skrypty do importu i przetwarzania plików GPX i FIT.
 
-## Funkcje
+## Zaimplementowane funkcjonalności
 
-- wczytywanie i wizualizacja danych geograficznych
+### Frontend i mapa
+
+- renderowanie mapy w `HTML5 Canvas` z obsługą kafli mapowych
+- przełączanie źródła mapy między `OpenStreetMap`, `OpenCycleMap` i warstwą satelitarną `Esri`
+- płynne przesuwanie, zoom myszą i gestami dotykowymi oraz reset widoku
+- drag and drop plików `KML` i `GPX` bezpośrednio na mapę
+- wczytywanie przykładowego pliku `sample.kml` przy starcie aplikacji
+- statystyki obiektów na mapie: liczba polygonów, linii i punktów
+- podgląd współrzędnych kursora na mapie
+
+### Warstwy i analiza przestrzenna
+
+- włączanie i wyłączanie warstw siatki `Ubersquadrat`, `Squadrats`, `Squadrathinos` i `Tile17`
+- dynamiczne dociąganie z backendu rekordów `Tile17` tylko dla aktualnie widocznego obszaru
+- podgląd wybranego kafla dla poziomów `Z11`, `Z14`, `Z17`, `Z18`, `Z19`, `Z20`, `Z21` i `Z22`
+- szczegóły kafla `Tile17`: lista szlaków i tras użytkownika przecinających wybrany kafel
+- podświetlanie kafli `Tile17` należących do wybranej trasy lub szlaku
+- proste liczenie odległości w linii prostej pomiędzy dwoma wskazanymi punktami
+
+### Szlaki i trasy użytkownika
+
+- osobna warstwa szlaków GPX ładowana z bazy dla aktualnego widoku mapy
+- filtrowanie szlaków po województwach oraz typach `foot` i `hiking`
+- osobna warstwa tras użytkownika ładowana z bazy dla aktualnego widoku mapy
+- liczenie łącznej długości aktualnie wyświetlonych szlaków i tras użytkownika
+- wyróżnianie klikniętej trasy na mapie
+
+### Rejestrowanie i zapisywanie śladu
+
+- śledzenie bieżącej lokalizacji z użyciem `Geolocation API`
+- rysowanie na żywo śladu podczas nagrywania trasy
+- generowanie pliku `GPX` z nagranego śladu
+- zapis śladu do backendu przez endpoint `POST /save-gpx`
+- awaryjne pobranie pliku lokalnie, jeżeli zapis po stronie serwera jest niedostępny
+
+### Backend i API
+
+- serwer `Express` serwujący frontend oraz endpointy mapowe
+- endpoint zdrowia aplikacji
+- endpointy do listy zapisanych plików GPX i zapisu nowych śladów
+- endpointy do pobierania regionów szlaków, szlaków w obrębie bounding boxa i tras użytkownika
+- endpointy do pobierania danych `Tile17`, szczegółów pojedynczego kafla i kafli przypisanych do trasy
+- middleware kontekstu użytkownika i logowanie zdarzeń zapisu GPX
+
+### Import i przetwarzanie danych
+
 - import tras GPX do bazy danych
 - import tras użytkownika do osobnej kategorii
-- konwersja plików FIT do GPX
+- konwersja plików `FIT` do `GPX`
 - backfill powiązań tras z kaflami `Tile17`
+- zbiorczy pipeline `refresh:all` uruchamiający importy i backfill
+- paski postępu w skryptach uruchamianych z terminala
 
 ## Wymagania
 
