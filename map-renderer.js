@@ -1011,27 +1011,6 @@ class MapRenderer {
             this.ctx.restore();
         }
 
-        if (this.highlightedRouteTiles.length > 0) {
-            this.ctx.save();
-            this.ctx.fillStyle = 'rgba(250, 204, 21, 0.22)';
-            this.ctx.strokeStyle = 'rgba(250, 204, 21, 0.95)';
-            this.ctx.lineWidth = 2;
-
-            this.highlightedRouteTiles.forEach(record => {
-                const topLeft = this.project(record.min_lon, record.max_lat);
-                const bottomRight = this.project(record.max_lon, record.min_lat);
-                const sx = topLeft.x - centerWorld.x + cx;
-                const sy = topLeft.y - centerWorld.y + cy;
-                const w = bottomRight.x - topLeft.x;
-                const h = bottomRight.y - topLeft.y;
-
-                this.ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
-                this.ctx.strokeRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
-            });
-
-            this.ctx.restore();
-        }
-
         if (this.layers.tile17 && this.tile17Records.length > 0) {
             this.ctx.save();
             this.ctx.lineWidth = 1;
@@ -1317,5 +1296,26 @@ class MapRenderer {
             });
         });
         this.ctx.restore();
+
+        if (this.highlightedRouteTiles.length > 0) {
+            this.ctx.save();
+            this.ctx.fillStyle = 'rgba(168, 85, 247, 0.42)';
+            this.ctx.strokeStyle = 'rgba(168, 85, 247, 0.98)';
+            this.ctx.lineWidth = 2;
+
+            this.highlightedRouteTiles.forEach(record => {
+                const topLeft = this.project(record.min_lon, record.max_lat);
+                const bottomRight = this.project(record.max_lon, record.min_lat);
+                const sx = topLeft.x - centerWorld.x + cx;
+                const sy = topLeft.y - centerWorld.y + cy;
+                const w = bottomRight.x - topLeft.x;
+                const h = bottomRight.y - topLeft.y;
+
+                this.ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
+                this.ctx.strokeRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
+            });
+
+            this.ctx.restore();
+        }
     }
 }

@@ -109,6 +109,9 @@ if (zoomSlider) {
 if (tileZoomSelect) {
     tileZoomSelect.addEventListener('change', (e) => {
         renderer.setSelectedTileZoom(e.target.value);
+        if (String(e.target.value) !== '17') {
+            clearTilePreviewDetails();
+        }
     });
 }
 
@@ -167,61 +170,48 @@ async function showTile17PopupForSelection() {
         }
 
         const payload = await response.json();
-        renderTile17Popup(payload, selectedTile);
+        renderTile17PreviewDetails(payload, selectedTile);
     } catch (err) {
         console.error('Failed to load Tile17 popup details:', err);
     }
 }
 
-function renderTile17Popup(payload, selectedTile) {
-    const popup = document.getElementById('routeInfoPopup');
-    if (!popup) return;
+function renderTile17PreviewDetails(payload, selectedTile) {
+    const container = document.getElementById('tilePreviewDetails');
+    const title = document.getElementById('tilePreviewTitle');
+    const trailsContainer = document.getElementById('tilePreviewTrails');
+    const userRoutesContainer = document.getElementById('tilePreviewUserRoutes');
+    if (!container || !title || !trailsContainer || !userRoutesContainer) return;
 
     const trails = Array.isArray(payload.trails) ? payload.trails : [];
     const userRoutes = Array.isArray(payload.userRoutes) ? payload.userRoutes : [];
 
-    popup.innerHTML = `
-        <button class="close-btn" type="button" aria-label="Zamknij">×</button>
-        <h3>Tile Z17: ${selectedTile.x}, ${selectedTile.y}</h3>
-        <div class="tile-popup-section">
-            <div class="tile-popup-title">Szlaki</div>
-            <div class="tile-popup-list">
-                ${trails.length > 0 ? trails.map(trail => `
-                    <button class="tile-popup-item" type="button" data-trail-id="${trail.trailId}">
-                        <span class="tile-popup-color" style="background:${escapeHtml(trail.color || '#94a3b8')}"></span>
-                        <span class="tile-popup-text">${escapeHtml(trail.name || 'Bez nazwy')}</span>
-                    </button>
-                `).join('') : '<div class="tile-popup-empty">Brak szlaków</div>'}
-            </div>
-        </div>
-        <div class="tile-popup-section">
-            <div class="tile-popup-title">Trasy użytkownika</div>
-            <div class="tile-popup-list">
-                ${userRoutes.length > 0 ? userRoutes.map(route => `
-                    <button class="tile-popup-item" type="button" data-trail-id="${route.trailId}">
-                        <span class="tile-popup-text">${escapeHtml(formatShortDate(route.recordedAt))} · ${escapeHtml(route.activityType || 'Unknown')}</span>
-                    </button>
-                `).join('') : '<div class="tile-popup-empty">Brak tras użytkownika</div>'}
-            </div>
-        </div>
-    `;
+    title.textContent = `Tile Z17: ${selectedTile.x}, ${selectedTile.y}`;
+    trailsContainer.innerHTML = trails.length > 0
+        ? trails.map(trail => `
+            <button class="tile-popup-item" type="button" data-trail-id="${trail.trailId}">
+                <span class="tile-popup-color" style="background:${escapeHtml(trail.color || '#94a3b8')}"></span>
+                <span class="tile-popup-text">${escapeHtml(trail.name || 'Bez nazwy')}</span>
+            </button>
+        `).join('')
+        : '<div class="tile-popup-empty">Brak szlaków</div>';
 
-    popup.querySelector('.close-btn').addEventListener('click', () => {
-        popup.classList.add('hidden');
-        renderer.setHighlightedRouteTiles([]);
-    });
+    userRoutesContainer.innerHTML = userRoutes.length > 0
+        ? userRoutes.map(route => `
+            <button class="tile-popup-item" type="button" data-trail-id="${route.trailId}">
+                <span class="tile-popup-text">${escapeHtml(formatShortDate(route.recordedAt))} · ${escapeHtml(route.activityType || 'Unknown')}</span>
+            </button>
+        `).join('')
+        : '<div class="tile-popup-empty">Brak tras użytkownika</div>';
 
-    popup.querySelectorAll('[data-trail-id]').forEach(button => {
+    container.querySelectorAll('[data-trail-id]').forEach(button => {
         button.addEventListener('click', async () => {
             const trailId = Number.parseInt(button.dataset.trailId, 10);
             if (!Number.isInteger(trailId)) return;
             await highlightTrailTiles(trailId);
         });
     });
-
-    popup.classList.remove('hidden');
-    popup.style.left = '24px';
-    popup.style.top = '24px';
+    container.classList.remove('hidden');
 }
 
 async function highlightTrailTiles(trailId) {
@@ -257,6 +247,20 @@ function escapeHtml(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+function clearTilePreviewDetails() {
+    const container = document.getElementById('tilePreviewDetails');
+    const title = document.getElementById('tilePreviewTitle');
+    const trailsContainer = document.getElementById('tilePreviewTrails');
+    const userRoutesContainer = document.getElementById('tilePreviewUserRoutes');
+
+    if (title) title.textContent = 'Tile Z17';
+    if (trailsContainer) trailsContainer.innerHTML = '<div class="tile-popup-empty">Brak szlaków</div>';
+    if (userRoutesContainer) userRoutesContainer.innerHTML = '<div class="tile-popup-empty">Brak tras użytkownika</div>';
+    if (container) container.classList.add('hidden');
+
+    renderer.setHighlightedRouteTiles([]);
 }
 
 calcPathBtn.addEventListener('click', () => {
@@ -648,5 +652,14 @@ if ('serviceWorker' in navigator) {
             .catch(err => {
                 console.log('ServiceWorker registration failed: ', err);
             });
+    });
+}
+
+const tilePreviewClearBtn = document.getElementById('tilePreviewClearBtn');
+if (tilePreviewClearBtn) {
+    tilePreviewClearBtn.addEventListener('click', () => {
+        renderer.selectedTile = null;
+        clearTilePreviewDetails();
+        renderer.requestUpdate();
     });
 }

@@ -180,6 +180,29 @@ h2 {
     margin-top: 4px;
 }
 
+.tile-preview-details {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.tile-preview-details.hidden {
+    display: none;
+}
+
+.tile-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+#tilePreviewTitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
 .controls-panel {
     display: flex;
     gap: 6px;
