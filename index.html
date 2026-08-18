@@ -82,62 +82,86 @@
         </div>
 
         <div id="layersPanel" class="panel layers-panel hidden">
-            <h2>Layers</h2>
+            <div class="layers-panel-header">
+                <h2>Layers</h2>
+            </div>
             <label class="layer-item">
                 <input type="checkbox" class="layer-checkbox" id="trackLocation">
                 <span class="layer-label">📍 Track Location</span>
             </label>
-            <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
-            <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerSquadrats">
-                <span class="layer-label">Squadrats (Z14)</span>
-            </label>
-            <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerSquadrathinos">
-                <span class="layer-label">Squadrathinos (Z17)</span>
-            </label>
-            <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerTile17">
-                <span class="layer-label">Tile17 (DB)</span>
-            </label>
-            <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerUbersquadrat">
-                <span class="layer-label">Ubersquadrat (Z11)</span>
-            </label>
-            <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="layerUbersquadratinho">
-                <span class="layer-label">Ubersquadratinho (Z14)</span>
-            </label>
+            <div class="panel-divider"></div>
 
-            <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
-            <h3 style="font-size: 14px; margin: 8px 0 4px 0; color: #9ca3af;">Szlaki GPX</h3>
-            <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="trailsLayerEnabled">
-                <span class="layer-label">Pokaż szlaki</span>
-            </label>
-            <div class="trail-type-row">
-                <label class="layer-item compact">
-                    <input type="checkbox" class="layer-checkbox" id="trailTypeFoot" checked>
-                    <span class="layer-label">foot</span>
-                </label>
-                <label class="layer-item compact">
-                    <input type="checkbox" class="layer-checkbox" id="trailTypeHiking" checked>
-                    <span class="layer-label">hiking</span>
-                </label>
-            </div>
-            <select id="trailRegionSelect" class="panel-select" multiple size="5"></select>
-            <div id="trailLayerStatus" class="layer-status">Szlaki wyłączone</div>
+            <section class="menu-group" data-group="squadrats">
+                <button type="button" class="menu-group-toggle" data-target="squadrats">
+                    <span>Squadrats</span>
+                    <span class="menu-group-icon">−</span>
+                </button>
+                <div class="menu-group-body" data-group-body="squadrats">
+                    <label class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="layerSquadrats">
+                        <span class="layer-label">Squadrats (Z14)</span>
+                    </label>
+                    <label class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="layerSquadrathinos">
+                        <span class="layer-label">Squadrathinos (Z17)</span>
+                    </label>
+                    <label class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="layerTile17">
+                        <span class="layer-label">Tile17 (DB)</span>
+                    </label>
+                    <label class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="layerUbersquadrat">
+                        <span class="layer-label">Ubersquadrat (Z11)</span>
+                    </label>
+                    <label class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="layerUbersquadratinho">
+                        <span class="layer-label">Ubersquadratinho (Z14)</span>
+                    </label>
+                </div>
+            </section>
 
-            <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
-            <h3 style="font-size: 14px; margin: 8px 0 4px 0; color: #9ca3af;">Trasy użytkownika</h3>
-            <label class="layer-item">
-                <input type="checkbox" class="layer-checkbox" id="userRoutesLayerEnabled">
-                <span class="layer-label">Pokaż trasy użytkownika</span>
-            </label>
-            <div id="userRouteLayerStatus" class="layer-status">Trasy użytkownika wyłączone</div>
+            <div class="panel-divider"></div>
+            <section class="menu-group" data-group="gpx-trails">
+                <button type="button" class="menu-group-toggle" data-target="gpx-trails">
+                    <span>Szlaki GPX</span>
+                    <span class="menu-group-icon">−</span>
+                </button>
+                <div class="menu-group-body" data-group-body="gpx-trails">
+                    <label class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="trailsLayerEnabled">
+                        <span class="layer-label">Pokaż szlaki</span>
+                    </label>
+                    <div class="trail-type-row">
+                        <label class="layer-item compact">
+                            <input type="checkbox" class="layer-checkbox" id="trailTypeFoot" checked>
+                            <span class="layer-label">foot</span>
+                        </label>
+                        <label class="layer-item compact">
+                            <input type="checkbox" class="layer-checkbox" id="trailTypeHiking" checked>
+                            <span class="layer-label">hiking</span>
+                        </label>
+                    </div>
+                    <select id="trailRegionSelect" class="panel-select" multiple size="5"></select>
+                    <div id="trailLayerStatus" class="layer-status">Szlaki wyłączone</div>
+                </div>
+            </section>
 
-            <div class="divider" style="width: 100%; height: 1px; margin: 12px 0;"></div>
-            <h3 style="font-size: 14px; margin: 8px 0 4px 0; color: #9ca3af;">Map Source</h3>
+            <div class="panel-divider"></div>
+            <section class="menu-group" data-group="user-routes">
+                <button type="button" class="menu-group-toggle" data-target="user-routes">
+                    <span>Trasy użytkownika</span>
+                    <span class="menu-group-icon">−</span>
+                </button>
+                <div class="menu-group-body" data-group-body="user-routes">
+                    <label class="layer-item">
+                        <input type="checkbox" class="layer-checkbox" id="userRoutesLayerEnabled">
+                        <span class="layer-label">Pokaż trasy użytkownika</span>
+                    </label>
+                    <div id="userRouteLayerStatus" class="layer-status">Trasy użytkownika wyłączone</div>
+                </div>
+            </section>
+
+            <div class="panel-divider"></div>
             <select id="mapSource" class="panel-select">
                 <option value="standard">🗺️ Standard (OSM)</option>
                 <option value="cycle">🚲 Cycle Map (OCM)</option>
@@ -149,41 +173,35 @@
             Tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors
         </div>
 
-        <div class="panel controls-panel">
-            <button id="layersBtn" class="icon-btn" title="Toggle Layers">☰</button>
-            <div class="divider"></div>
-            <button id="trackBtn" class="icon-btn" title="Track Location">📡</button>
-            <div class="divider"></div>
-            <button id="calcPathBtn" class="icon-btn" title="Calculate Path">📍</button>
-            <div class="divider"></div>
-            <button id="resetViewBtn" class="icon-btn" title="Reset View">⟲</button>
-            <div class="divider"></div>
-            <button id="zoomOutBtn" class="icon-btn" title="Zoom Out">−</button>
-            <label class="zoom-slider-control" title="Zoom">
-                <span class="zoom-slider-label">Zoom</span>
-                <span id="zoomValue">8.0</span>
-                <input id="zoomSlider" type="range" min="1" max="22" step="0.25" value="8" list="zoomTicks">
-                <datalist id="zoomTicks">
-                    <option value="1" label="1"></option>
-                    <option value="6" label="6"></option>
-                    <option value="11" label="11"></option>
-                    <option value="17" label="17"></option>
-                    <option value="22" label="22"></option>
-                </datalist>
-                <div class="zoom-slider-scale" aria-hidden="true">
-                    <span>1</span>
-                    <span>6</span>
-                    <span>11</span>
-                    <span>17</span>
-                    <span>22</span>
-                </div>
-            </label> 
-            <button id="zoomInBtn" class="icon-btn" title="Zoom In">+</button>
-
-        </div>
-
-        <div id="positionOverlay" style="position: absolute; bottom: 20px; left: 20px; background: rgba(0, 0, 0, 0.75); color: #ffffff; padding: 8px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; pointer-events: none; border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(12px); box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-            Lat: <span id="mouseLat">0.0000</span>°, Lon: <span id="mouseLon">0.0000</span>°
+        <div class="panel bottom-toolbar">
+            <div class="controls-panel">
+                <button id="layersBtn" class="icon-btn" title="Toggle Layers">☰</button>
+                <div class="divider"></div>
+                <button id="trackBtn" class="icon-btn" title="Track Location">📡</button>
+                <div class="divider"></div>
+                <button id="calcPathBtn" class="icon-btn" title="Calculate Path">📍</button>
+                <div class="divider"></div>
+                <button id="resetViewBtn" class="icon-btn" title="Reset View">⟲</button>
+                <div class="divider"></div>
+                <button id="zoomOutBtn" class="icon-btn" title="Zoom Out">−</button>
+                <label class="zoom-slider-control" title="Zoom">
+                    <div class="zoom-slider-main">
+                        <input id="zoomSlider" type="range" min="1" max="22" step="0.25" value="8" list="zoomTicks">
+                        <span id="zoomValue">8.0</span>
+                    </div>
+                    <datalist id="zoomTicks">
+                        <option value="1" label="1"></option>
+                        <option value="6" label="6"></option>
+                        <option value="11" label="11"></option>
+                        <option value="17" label="17"></option>
+                        <option value="22" label="22"></option>
+                    </datalist>
+                </label>
+                <button id="zoomInBtn" class="icon-btn" title="Zoom In">+</button>
+            </div>
+            <div id="positionOverlay" class="position-overlay">
+                Lat: <span id="mouseLat">0.0000</span>°, Lon: <span id="mouseLon">0.0000</span>°
+            </div>
         </div>
 
         <div id="routeInfoPopup" class="route-info-popup hidden"></div>

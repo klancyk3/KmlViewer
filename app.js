@@ -192,6 +192,17 @@ document.getElementById('layersBtn').addEventListener('click', () => {
     document.getElementById('layersBtn').classList.toggle('active');
 });
 
+document.querySelectorAll('.menu-group-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+        const group = toggle.closest('.menu-group');
+        const icon = toggle.querySelector('.menu-group-icon');
+        if (!group || !icon) return;
+
+        group.classList.toggle('collapsed');
+        icon.textContent = group.classList.contains('collapsed') ? '+' : '−';
+    });
+});
+
 [
     ['layerSquadrats', 'squadrats'],
     ['layerSquadrathinos', 'squadrathinos'],

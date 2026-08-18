@@ -55,7 +55,7 @@ canvas:active {
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 20px;
+    padding: 14px;
     pointer-events: auto;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
@@ -64,7 +64,7 @@ canvas:active {
     position: absolute;
     top: 24px;
     left: 24px;
-    width: 280px;
+    width: 250px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -110,7 +110,7 @@ canvas:active {
     position: absolute;
     top: 24px;
     right: 24px;
-    width: 280px;
+    width: 260px;
     max-height: calc(100vh - 48px);
     overflow-y: auto;
     transform: translateX(0);
@@ -131,16 +131,16 @@ h1 {
 }
 
 h2 {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
     color: var(--text-primary);
 }
 
 .subtitle {
     color: var(--text-secondary);
-    font-size: 13px;
-    margin-bottom: 16px;
+    font-size: 12px;
+    margin-bottom: 12px;
 }
 
 .stats {
@@ -181,27 +181,24 @@ h2 {
 }
 
 .controls-panel {
-    position: absolute;
-    bottom: 24px;
-    right: 24px;
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
-    padding: 8px;
+    flex-wrap: nowrap;
 }
 
 .icon-btn {
     background: transparent;
     border: none;
     color: var(--text-primary);
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 15px;
     transition: background 0.2s;
 }
 
@@ -212,21 +209,17 @@ h2 {
 
 .zoom-slider-control {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    min-width: 170px;
+    align-items: center;
+    min-width: 160px;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: 11px;
     font-variant-numeric: tabular-nums;
 }
 
-.zoom-slider-label {
-    color: var(--text-primary);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+.zoom-slider-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .zoom-slider-control input {
@@ -237,35 +230,22 @@ h2 {
 }
 
 .zoom-slider-control span {
-    min-width: 26px;
+    min-width: 30px;
     text-align: right;
-}
-
-.zoom-slider-scale {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-.zoom-slider-scale span {
-    min-width: auto;
-    text-align: center;
 }
 
 .divider {
     width: 1px;
-    height: 24px;
+    height: 18px;
     background: var(--border);
-    margin: 0 4px;
+    margin: 0 2px;
 }
 
 /* Layer Toggles */
 .layer-item {
     display: flex;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     cursor: pointer;
 }
 
@@ -275,13 +255,14 @@ h2 {
 
 .layer-checkbox {
     appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--text-secondary);
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--text-secondary);
     border-radius: 4px;
-    margin-right: 12px;
+    margin-right: 10px;
     position: relative;
     transition: all 0.2s;
+    flex: 0 0 auto;
 }
 
 .layer-checkbox:checked {
@@ -293,16 +274,17 @@ h2 {
     content: '✓';
     position: absolute;
     color: white;
-    font-size: 12px;
+    font-size: 10px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
 }
 
 .layer-label {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text-secondary);
     transition: color 0.2s;
+    line-height: 1.2;
 }
 
 .layer-checkbox:checked+.layer-label {
@@ -310,7 +292,7 @@ h2 {
 }
 
 .layer-item.compact {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .trail-type-row {
@@ -321,9 +303,60 @@ h2 {
 
 .layer-status {
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.4;
-    margin-top: 8px;
+    margin-top: 6px;
+}
+
+.layers-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.panel-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border);
+    margin: 10px 0;
+}
+
+.menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-group-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    color: var(--text-primary);
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.menu-group-icon {
+    min-width: auto;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.menu-group-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.menu-group.collapsed .menu-group-body {
+    display: none;
 }
 
 
@@ -333,11 +366,11 @@ h2 {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 7px 10px;
     color: var(--text-primary);
     font-family: var(--font-family);
-    font-size: 14px;
-    margin: 8px 0;
+    font-size: 12px;
+    margin: 6px 0;
     cursor: pointer;
     outline: none;
     transition: border-color 0.2s;
@@ -353,7 +386,7 @@ h2 {
 }
 
 #trailRegionSelect {
-    min-height: 126px;
+    min-height: 96px;
 }
 
 #trailRegionSelect option {
@@ -443,6 +476,29 @@ h2 {
 
 .map-attribution a:hover {
     text-decoration: underline;
+}
+
+.bottom-toolbar {
+    position: absolute;
+    left: 24px;
+    bottom: 24px;
+    width: fit-content;
+    max-width: calc(100vw - 48px);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    min-height: 40px;
+    padding: 6px 10px;
+}
+
+.position-overlay {
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    pointer-events: none;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 /* Drop Zone */
@@ -586,17 +642,25 @@ h2 {
         overflow-y: auto;
     }
 
-    .controls-panel {
-        bottom: 12px;
+    .bottom-toolbar {
+        left: 12px;
         right: 12px;
-        padding: 6px;
-        gap: 4px;
+        bottom: 12px;
+        padding: 8px 10px;
+        gap: 8px;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .controls-panel {
+        width: 100%;
+        flex-wrap: wrap;
     }
 
     .icon-btn {
-        width: 44px;
-        height: 44px;
-        font-size: 20px;
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
     }
 
     .panel {
@@ -613,7 +677,8 @@ h2 {
         padding-bottom: 12px;
     }
 
-    #positionOverlay {
-        display: none !important;
+    .position-overlay {
+        width: 100%;
+        font-size: 11px;
     }
 }
