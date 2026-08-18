@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="KML Canvas Viewer" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <time>2026-08-18T07:15:14.549Z</time>
+  </metadata>
+  <trk>
+    <name>Track 8/18/2026, 9:15:14 AM</name>
+    <trkseg>
+      <trkpt lat="50.165339507412845" lon="18.847553683384533">
+        
+        <time>2026-08-18T07:14:27.596Z</time>
+      </trkpt>
+      <trkpt lat="50.16538931863285" lon="18.847610684736004">
+        
+        <time>2026-08-18T07:14:39.160Z</time>
+      </trkpt>
+      <trkpt lat="50.165229987576765" lon="18.847737912483915">
+        
+        <time>2026-08-18T07:14:58.862Z</time>
+      </trkpt>
+      <trkpt lat="50.165194488974585" lon="18.84771328528198">
+        
+        <time>2026-08-18T07:15:09.594Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

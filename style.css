@@ -176,6 +176,10 @@ h2 {
     line-height: 1.6;
 }
 
+.info-panel-section {
+    margin-top: 4px;
+}
+
 .controls-panel {
     position: absolute;
     bottom: 24px;
@@ -341,6 +345,11 @@ h2 {
 
 .panel-select:hover {
     border-color: var(--accent);
+}
+
+.panel-select option {
+    background: #111827;
+    color: var(--text-primary);
 }
 
 #trailRegionSelect {
