@@ -17,13 +17,14 @@ function createTrailRouter(trailRepository) {
         const requestedRegions = parseCsv(req.query.regions);
         const requestedTypes = parseCsv(req.query.types)
             .filter(type => SUPPORTED_TRAIL_TYPES.includes(type));
+        const bounds = parseBounds(req.query);
 
         if (requestedRegions.length === 0 || requestedTypes.length === 0) {
             return res.json({ features: [], sourceCount: 0, totalKm: 0 });
         }
 
         try {
-            res.json(await trailRepository.getFeatures(requestedRegions, requestedTypes));
+            res.json(await trailRepository.getFeatures(requestedRegions, requestedTypes, bounds));
         } catch (err) {
             console.error('Error reading trail features:', err);
             res.status(500).send('Error reading trail features');
@@ -31,8 +32,12 @@ function createTrailRouter(trailRepository) {
     });
 
     router.get('/user-gpx', async (req, res) => {
+        const bounds = parseBounds(req.query);
+
         try {
-            res.json(await trailRepository.getUserRoutes());
+            res.json(bounds
+                ? await trailRepository.getUserRoutesInBounds(bounds)
+                : await trailRepository.getUserRoutes());
         } catch (err) {
             console.error('Error reading user GPX routes:', err);
             res.status(500).send('Error reading user GPX routes');
@@ -49,4 +54,21 @@ function parseCsv(value) {
         .filter(Boolean);
 }
 
-module.exports = { createTrailRouter, parseCsv };
+function parseBounds(query) {
+    const minLon = Number.parseFloat(query.minLon);
+    const minLat = Number.parseFloat(query.minLat);
+    const maxLon = Number.parseFloat(query.maxLon);
+    const maxLat = Number.parseFloat(query.maxLat);
+
+    if (![minLon, minLat, maxLon, maxLat].every(Number.isFinite)) {
+        return null;
+    }
+
+    if (minLon >= maxLon || minLat >= maxLat) {
+        return null;
+    }
+
+    return { minLon, minLat, maxLon, maxLat };
+}
+
+module.exports = { createTrailRouter, parseCsv, parseBounds };

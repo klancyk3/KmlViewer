@@ -1,4 +1,4 @@
-const { parseCsv } = require('./trailRoutes');
+const { parseBounds, parseCsv } = require('./trailRoutes');
 
 describe('trail routes helpers', () => {
     test('parseCsv trims values and removes empty entries', () => {
@@ -7,5 +7,23 @@ describe('trail routes helpers', () => {
 
     test('parseCsv handles missing values', () => {
         expect(parseCsv(undefined)).toEqual([]);
+    });
+
+    test('parseBounds returns null for incomplete bounds', () => {
+        expect(parseBounds({ minLon: '19', minLat: '50', maxLon: '20' })).toBeNull();
+    });
+
+    test('parseBounds parses a valid bbox', () => {
+        expect(parseBounds({
+            minLon: '19.1',
+            minLat: '49.9',
+            maxLon: '20.2',
+            maxLat: '50.3'
+        })).toEqual({
+            minLon: 19.1,
+            minLat: 49.9,
+            maxLon: 20.2,
+            maxLat: 50.3
+        });
     });
 });

@@ -260,6 +260,18 @@ class MapRenderer {
         this.animate();
     }
 
+    getViewportBounds() {
+        const topLeft = this.unproject(0, 0);
+        const bottomRight = this.unproject(this.canvas.width, this.canvas.height);
+
+        return {
+            minLon: Math.min(topLeft.lon, bottomRight.lon),
+            maxLon: Math.max(topLeft.lon, bottomRight.lon),
+            minLat: Math.min(topLeft.lat, bottomRight.lat),
+            maxLat: Math.max(topLeft.lat, bottomRight.lat)
+        };
+    }
+
     // Convert Lat/Lon to World Pixel Coordinates at current Zoom
     project(lon, lat) {
         const tileSize = this.tileSystem.tileSize;
@@ -322,6 +334,7 @@ class MapRenderer {
             this.center = newCenter;
             this.lastMouse = { x: e.clientX, y: e.clientY };
             this.hideRoutePopup();
+            this.notifyViewportChanged();
             this.requestUpdate();
         });
 
@@ -373,6 +386,7 @@ class MapRenderer {
             this.center = { lon, lat };
             this.notifyZoomChanged();
             this.hideRoutePopup();
+            this.notifyViewportChanged();
             this.requestUpdate();
         }, { passive: false });
 
@@ -421,6 +435,7 @@ class MapRenderer {
                 this.center = newCenter;
                 this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
                 this.hideRoutePopup();
+                this.notifyViewportChanged();
                 this.requestUpdate();
             } else if (e.touches.length === 2 && this.isPinching) {
                 const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -457,6 +472,7 @@ class MapRenderer {
                     this.center = { lon, lat };
                     this.lastTouchDistance = distance;
                     this.hideRoutePopup();
+                    this.notifyViewportChanged();
                     this.requestUpdate();
                 }
             }
@@ -703,6 +719,7 @@ class MapRenderer {
         this.zoom = nextZoom;
         this.notifyZoomChanged();
         this.hideRoutePopup();
+        this.notifyViewportChanged();
         this.requestUpdate();
     }
 
@@ -734,6 +751,12 @@ class MapRenderer {
     notifyZoomChanged() {
         if (this.onZoomChanged) {
             this.onZoomChanged(this.zoom);
+        }
+    }
+
+    notifyViewportChanged() {
+        if (this.onViewportChanged) {
+            this.onViewportChanged(this.getViewportBounds(), this.zoom);
         }
     }
 
@@ -844,6 +867,7 @@ class MapRenderer {
         this.zoom = Math.min(zoomX, zoomY);
         this.zoom = Math.min(Math.max(this.zoom, 1), 18);
         this.notifyZoomChanged();
+        this.notifyViewportChanged();
         this.requestUpdate();
     }
 

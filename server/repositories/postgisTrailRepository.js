@@ -29,12 +29,25 @@ class PostgisTrailRepository {
         }));
     }
 
-    async getFeatures(regionKeys, trailTypes) {
+    async getFeatures(regionKeys, trailTypes, bounds = null) {
         if (!this.database.isConfigured()) return {
             features: [],
             sourceCount: 0,
             totalKm: 0
         };
+
+        const params = [regionKeys, trailTypes];
+        const boundsClause = bounds
+            ? `
+              AND ST_Intersects(
+                    geom,
+                    ST_MakeEnvelope($3, $4, $5, $6, 4326)
+                  )`
+            : '';
+
+        if (bounds) {
+            params.push(bounds.minLon, bounds.minLat, bounds.maxLon, bounds.maxLat);
+        }
 
         const result = await this.database.query(`
             SELECT
@@ -53,8 +66,9 @@ class PostgisTrailRepository {
             FROM gpx_trails
             WHERE region_key = ANY($1)
               AND trail_type = ANY($2)
+              ${boundsClause}
             ORDER BY region_name, trail_type, source_file, segment_index
-        `, [regionKeys, trailTypes]);
+        `, params);
 
         const sourceFiles = new Set();
         let totalKm = 0;
@@ -94,6 +108,10 @@ class PostgisTrailRepository {
 
     async getUserRoutes() {
         return this.getFeatures([USER_ROUTE_REGION_KEY], [USER_ROUTE_TRAIL_TYPE]);
+    }
+
+    async getUserRoutesInBounds(bounds) {
+        return this.getFeatures([USER_ROUTE_REGION_KEY], [USER_ROUTE_TRAIL_TYPE], bounds);
     }
 
     getFallbackColor(trailType) {

@@ -86,4 +86,21 @@ describe('PostgisTrailRepository', () => {
             totalKm: 0
         });
     });
+
+    test('passes bbox filter into PostGIS query when bounds are provided', async () => {
+        const database = createDatabaseMock({ features: [] });
+        const repository = new PostgisTrailRepository(database);
+
+        await repository.getFeatures(['slaskie-260813'], ['hiking'], {
+            minLon: 19,
+            minLat: 50,
+            maxLon: 20,
+            maxLat: 51
+        });
+
+        expect(database.query).toHaveBeenCalledWith(
+            expect.stringContaining('ST_MakeEnvelope($3, $4, $5, $6, 4326)'),
+            [['slaskie-260813'], ['hiking'], 19, 50, 20, 51]
+        );
+    });
 });

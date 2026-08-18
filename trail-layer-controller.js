@@ -6,6 +6,10 @@ class TrailLayerController {
         this.fetch = (...args) => fetchRef.call(window, ...args);
         this.trailAbortController = null;
         this.userRouteAbortController = null;
+        this.minimumTrailZoom = 10;
+        this.viewportUpdateHandle = null;
+        this.lastTrailQueryKey = null;
+        this.lastUserRouteQueryKey = null;
     }
 
     async initialize() {
@@ -55,6 +59,10 @@ class TrailLayerController {
         if (controls.userRoutes && controls.userRoutes.checked) {
             this.updateUserRoutes();
         }
+
+        this.renderer.onViewportChanged = () => {
+            this.scheduleViewportRefresh();
+        };
     }
 
     async update() {
@@ -68,6 +76,7 @@ class TrailLayerController {
             this.removeTrailFeatures();
             this.setDistance(0);
             this.setStatus('Szlaki wyłączone');
+            this.lastTrailQueryKey = null;
             return;
         }
 
@@ -88,14 +97,40 @@ class TrailLayerController {
             return;
         }
 
+        if (this.renderer.zoom < this.minimumTrailZoom) {
+            this.abortCurrentTrailLoad();
+            this.removeTrailFeatures();
+            this.setDistance(0);
+            this.setStatus(`Przybliż mapę do zoom ${this.minimumTrailZoom}, aby wczytać szlaki`);
+            this.lastTrailQueryKey = null;
+            return;
+        }
+
         this.abortCurrentTrailLoad();
         this.trailAbortController = new AbortController();
-        this.setStatus('Ładowanie szlaków...');
+        const bounds = this.renderer.getViewportBounds();
+        const queryKey = JSON.stringify({
+            regions,
+            types,
+            bounds: roundBounds(bounds)
+        });
+
+        if (this.lastTrailQueryKey === queryKey) {
+            this.trailAbortController = null;
+            return;
+        }
+
+        this.lastTrailQueryKey = queryKey;
+        this.setStatus('Ładowanie szlaków z widocznego obszaru...');
 
         try {
             const params = new URLSearchParams({
                 regions: regions.join(','),
-                types: types.join(',')
+                types: types.join(','),
+                minLon: String(bounds.minLon),
+                minLat: String(bounds.minLat),
+                maxLon: String(bounds.maxLon),
+                maxLat: String(bounds.maxLat)
             });
             const response = await this.fetch(`/trail-gpx?${params}`, {
                 signal: this.trailAbortController.signal
@@ -113,12 +148,13 @@ class TrailLayerController {
             }
 
             this.setDistance(totalKm);
-            this.setStatus(`Załadowano ${features.length} obiektów z ${sourceCount} plików`);
+            this.setStatus(`Załadowano ${features.length} obiektów z ${sourceCount} plików w widoku`);
         } catch (err) {
             if (err.name === 'AbortError') return;
 
             console.error('Could not load trail GPX files:', err);
             this.setStatus('Nie udało się załadować szlaków');
+            this.lastTrailQueryKey = null;
         } finally {
             this.trailAbortController = null;
         }
@@ -131,16 +167,43 @@ class TrailLayerController {
             this.removeUserRouteFeatures();
             this.setUserRouteDistance(0);
             this.setUserRouteStatus('Trasy użytkownika wyłączone');
+            this.lastUserRouteQueryKey = null;
+            return;
+        }
+
+        if (this.renderer.zoom < this.minimumTrailZoom) {
+            this.abortCurrentUserRouteLoad();
+            this.removeUserRouteFeatures();
+            this.setUserRouteDistance(0);
+            this.setUserRouteStatus(`Przybliż mapę do zoom ${this.minimumTrailZoom}, aby wczytać trasy użytkownika`);
+            this.lastUserRouteQueryKey = null;
             return;
         }
 
         this.removeUserRouteFeatures();
         this.abortCurrentUserRouteLoad();
         this.userRouteAbortController = new AbortController();
-        this.setUserRouteStatus('Ładowanie tras użytkownika...');
+        const bounds = this.renderer.getViewportBounds();
+        const queryKey = JSON.stringify({
+            bounds: roundBounds(bounds)
+        });
+
+        if (this.lastUserRouteQueryKey === queryKey) {
+            this.userRouteAbortController = null;
+            return;
+        }
+
+        this.lastUserRouteQueryKey = queryKey;
+        this.setUserRouteStatus('Ładowanie tras użytkownika z widocznego obszaru...');
 
         try {
-            const response = await this.fetch('/user-gpx', {
+            const params = new URLSearchParams({
+                minLon: String(bounds.minLon),
+                minLat: String(bounds.minLat),
+                maxLon: String(bounds.maxLon),
+                maxLat: String(bounds.maxLat)
+            });
+            const response = await this.fetch(`/user-gpx?${params}`, {
                 signal: this.userRouteAbortController.signal
             });
 
@@ -165,15 +228,23 @@ class TrailLayerController {
             }
 
             this.setUserRouteDistance(totalKm);
-            this.setUserRouteStatus(`Załadowano ${features.length} obiektów z ${sourceCount} plików`);
+            this.setUserRouteStatus(`Załadowano ${features.length} obiektów z ${sourceCount} plików w widoku`);
         } catch (err) {
             if (err.name === 'AbortError') return;
 
             console.error('Could not load user GPX routes:', err);
             this.setUserRouteStatus('Nie udało się załadować tras użytkownika');
+            this.lastUserRouteQueryKey = null;
         } finally {
             this.userRouteAbortController = null;
         }
+    }
+
+    scheduleViewportRefresh() {
+        clearTimeout(this.viewportUpdateHandle);
+        this.viewportUpdateHandle = setTimeout(() => {
+            this.update();
+        }, 200);
     }
 
     mapTrailResponseToFeatures(payload) {
@@ -310,4 +381,13 @@ class TrailLayerController {
             userRoutes: this.document.getElementById('userRoutesLayerEnabled')
         };
     }
+}
+
+function roundBounds(bounds) {
+    return {
+        minLon: Number(bounds.minLon.toFixed(4)),
+        minLat: Number(bounds.minLat.toFixed(4)),
+        maxLon: Number(bounds.maxLon.toFixed(4)),
+        maxLat: Number(bounds.maxLat.toFixed(4))
+    };
 }
