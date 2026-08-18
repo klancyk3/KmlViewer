@@ -1007,11 +1007,10 @@ class MapRenderer {
 
         if (this.layers.tile17 && this.tile17Records.length > 0) {
             this.ctx.save();
-            this.ctx.fillStyle = 'rgba(34, 197, 94, 0.18)';
-            this.ctx.strokeStyle = 'rgba(34, 197, 94, 0.8)';
             this.ctx.lineWidth = 1;
 
             this.tile17Records.forEach(record => {
+                const hasUserRoute = record.has_user_route === true;
                 const topLeft = this.project(record.min_lon, record.max_lat);
                 const bottomRight = this.project(record.max_lon, record.min_lat);
                 const sx = topLeft.x - centerWorld.x + cx;
@@ -1019,6 +1018,8 @@ class MapRenderer {
                 const w = bottomRight.x - topLeft.x;
                 const h = bottomRight.y - topLeft.y;
 
+                this.ctx.fillStyle = hasUserRoute ? 'rgba(34, 197, 94, 0.18)' : 'rgba(239, 68, 68, 0.18)';
+                this.ctx.strokeStyle = hasUserRoute ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)';
                 this.ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
                 this.ctx.strokeRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
             });

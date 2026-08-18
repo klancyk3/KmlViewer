@@ -21,19 +21,30 @@ class Tile17Repository {
     async getTilesInBounds(bounds) {
         const result = await this.database.query(
             `SELECT
-                id,
-                index_ne,
-                index_we,
-                min_lon,
-                max_lon,
-                min_lat,
-                max_lat
-             FROM "Tiles17"
-             WHERE max_lon >= $1
-               AND min_lon <= $2
-               AND max_lat >= $3
-               AND min_lat <= $4
-             ORDER BY index_ne, index_we`,
+                t.id,
+                t.index_ne,
+                t.index_we,
+                t.min_lon,
+                t.max_lon,
+                t.min_lat,
+                t.max_lat,
+                BOOL_OR(gt.trail_type = 'user') AS has_user_route
+             FROM "Tiles17" t
+             JOIN "gpx_trail_Tiles17" gt17 ON gt17.tile17_id = t.id
+             JOIN gpx_trails gt ON gt.id = gt17.trail_id
+             WHERE t.max_lon >= $1
+               AND t.min_lon <= $2
+               AND t.max_lat >= $3
+               AND t.min_lat <= $4
+             GROUP BY
+                t.id,
+                t.index_ne,
+                t.index_we,
+                t.min_lon,
+                t.max_lon,
+                t.min_lat,
+                t.max_lat
+             ORDER BY t.index_ne, t.index_we`,
             [bounds.minLon, bounds.maxLon, bounds.minLat, bounds.maxLat]
         );
 
