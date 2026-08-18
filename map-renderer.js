@@ -1011,6 +1011,12 @@ class MapRenderer {
 
             this.tile17Records.forEach(record => {
                 const hasUserRoute = record.has_user_route === true;
+                const hasTrailRoute = record.has_trail_route === true;
+
+                if (!hasTrailRoute) {
+                    return;
+                }
+
                 const topLeft = this.project(record.min_lon, record.max_lat);
                 const bottomRight = this.project(record.max_lon, record.min_lat);
                 const sx = topLeft.x - centerWorld.x + cx;

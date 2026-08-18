@@ -28,7 +28,8 @@ class Tile17Repository {
                 t.max_lon,
                 t.min_lat,
                 t.max_lat,
-                BOOL_OR(gt.trail_type = 'user') AS has_user_route
+                BOOL_OR(gt.trail_type = 'user') AS has_user_route,
+                BOOL_OR(gt.trail_type <> 'user') AS has_trail_route
              FROM "Tiles17" t
              JOIN "gpx_trail_Tiles17" gt17 ON gt17.tile17_id = t.id
              JOIN gpx_trails gt ON gt.id = gt17.trail_id
