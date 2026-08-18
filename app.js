@@ -195,6 +195,7 @@ document.getElementById('layersBtn').addEventListener('click', () => {
 [
     ['layerSquadrats', 'squadrats'],
     ['layerSquadrathinos', 'squadrathinos'],
+    ['layerTile17', 'tile17'],
     ['layerUbersquadrat', 'ubersquadrat'],
     ['layerUbersquadratinho', 'ubersquadratinho']
 ].forEach(([id, layerKey]) => {
@@ -202,10 +203,68 @@ document.getElementById('layersBtn').addEventListener('click', () => {
     if (el) {
         el.addEventListener('change', (e) => {
             renderer.layers[layerKey] = e.target.checked;
+            if (layerKey === 'tile17') {
+                refreshTile17Layer(true);
+            }
             renderer.requestUpdate();
         });
     }
 });
+
+let lastTile17BoundsKey = null;
+let tile17RequestId = 0;
+
+async function refreshTile17Layer(force = false) {
+    if (!renderer.layers.tile17) {
+        renderer.setTile17Records([]);
+        lastTile17BoundsKey = null;
+        return;
+    }
+
+    const bounds = renderer.getViewportBounds();
+    const boundsKey = [
+        bounds.minLon.toFixed(4),
+        bounds.minLat.toFixed(4),
+        bounds.maxLon.toFixed(4),
+        bounds.maxLat.toFixed(4)
+    ].join('|');
+
+    if (!force && boundsKey === lastTile17BoundsKey) {
+        return;
+    }
+
+    lastTile17BoundsKey = boundsKey;
+    const requestId = ++tile17RequestId;
+
+    try {
+        const params = new URLSearchParams({
+            minLon: String(bounds.minLon),
+            minLat: String(bounds.minLat),
+            maxLon: String(bounds.maxLon),
+            maxLat: String(bounds.maxLat)
+        });
+        const response = await fetch(`/tile17?${params.toString()}`);
+        if (!response.ok) {
+            throw new Error(`Tile17 request failed with status ${response.status}`);
+        }
+
+        const payload = await response.json();
+        if (requestId !== tile17RequestId) {
+            return;
+        }
+
+        renderer.setTile17Records(payload.records || []);
+    } catch (err) {
+        console.error('Failed to load Tile17 records:', err);
+        if (requestId === tile17RequestId) {
+            renderer.setTile17Records([]);
+        }
+    }
+}
+
+renderer.onViewportChanged = () => {
+    refreshTile17Layer();
+};
 
 // Location Tracking Logic
 let trackingWatchId = null;

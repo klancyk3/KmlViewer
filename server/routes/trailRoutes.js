@@ -1,7 +1,7 @@
 const express = require('express');
 const { SUPPORTED_TRAIL_TYPES } = require('../repositories/postgisTrailRepository');
 
-function createTrailRouter(trailRepository) {
+function createTrailRouter(trailRepository, tile17Repository) {
     const router = express.Router();
 
     router.get('/trail-regions', async (req, res) => {
@@ -41,6 +41,21 @@ function createTrailRouter(trailRepository) {
         } catch (err) {
             console.error('Error reading user GPX routes:', err);
             res.status(500).send('Error reading user GPX routes');
+        }
+    });
+
+    router.get('/tile17', async (req, res) => {
+        const bounds = parseBounds(req.query);
+
+        if (!bounds) {
+            return res.json({ records: [] });
+        }
+
+        try {
+            res.json({ records: await tile17Repository.getTilesInBounds(bounds) });
+        } catch (err) {
+            console.error('Error reading Tile17 records:', err);
+            res.status(500).send('Error reading Tile17 records');
         }
     });
 

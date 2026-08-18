@@ -1,7 +1,7 @@
 const TILE_ZOOM = 17;
 const MAX_LATITUDE = 85.05112878;
 
-class Squadrat {
+class Tile17 {
     constructor({ index_ne, index_we, min_lon, max_lon, min_lat, max_lat }) {
         this.index_ne = index_ne;
         this.index_we = index_we;
@@ -12,7 +12,7 @@ class Squadrat {
     }
 
     static fromTile(index_ne, index_we, zoom = TILE_ZOOM) {
-        return new Squadrat({
+        return new Tile17({
             index_ne,
             index_we,
             min_lon: tileXToLon(index_we, zoom),
@@ -44,7 +44,7 @@ class Squadrat {
         return Array.from(tileKeys)
             .map(key => key.split(':').map(Number))
             .sort(([aY, aX], [bY, bX]) => aY - bY || aX - bX)
-            .map(([index_ne, index_we]) => Squadrat.fromTile(index_ne, index_we, zoom));
+            .map(([index_ne, index_we]) => Tile17.fromTile(index_ne, index_we, zoom));
     }
 }
 
@@ -112,6 +112,6 @@ function dedupeTiles(tiles) {
 }
 
 module.exports = {
-    Squadrat,
+    Tile17,
     TILE_ZOOM
 };

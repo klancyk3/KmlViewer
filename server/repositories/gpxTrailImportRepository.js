@@ -1,9 +1,9 @@
-const { Squadrat } = require('../domain/squadrat');
+const { Tile17 } = require('../domain/tile17');
 
 class GpxTrailImportRepository {
-    constructor(database, squadratRepository = null) {
+    constructor(database, tile17Repository = null) {
         this.database = database;
-        this.squadratRepository = squadratRepository;
+        this.tile17Repository = tile17Repository;
     }
 
     async createRun(sourceDir) {
@@ -84,10 +84,10 @@ class GpxTrailImportRepository {
             ]
         );
 
-        if (this.squadratRepository && Array.isArray(segment.coordinates) && segment.coordinates.length > 0) {
-            await this.squadratRepository.saveTrailSquadrats(
+        if (this.tile17Repository && Array.isArray(segment.coordinates) && segment.coordinates.length > 0) {
+            await this.tile17Repository.saveTrailTiles17(
                 result.rows[0].id,
-                Squadrat.collectForLineString(segment.coordinates)
+                Tile17.collectForLineString(segment.coordinates)
             );
         }
 

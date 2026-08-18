@@ -1,16 +1,16 @@
 const { GpxTrailImportRepository } = require('./gpxTrailImportRepository');
 
 describe('GpxTrailImportRepository', () => {
-    test('saves squadrats for imported segment when squadrat repository is provided', async () => {
+    test('saves Tile17 records for imported segment when Tile17 repository is provided', async () => {
         const database = {
             query: jest.fn().mockResolvedValue({
                 rows: [{ id: 123 }]
             })
         };
-        const squadratRepository = {
-            saveTrailSquadrats: jest.fn().mockResolvedValue(undefined)
+        const tile17Repository = {
+            saveTrailTiles17: jest.fn().mockResolvedValue(undefined)
         };
-        const repository = new GpxTrailImportRepository(database, squadratRepository);
+        const repository = new GpxTrailImportRepository(database, tile17Repository);
 
         const segment = {
             sourceFile: 'user/2024/activity.tcx',
@@ -33,8 +33,8 @@ describe('GpxTrailImportRepository', () => {
         await repository.upsertTrailSegment(segment);
 
         expect(database.query).toHaveBeenCalledTimes(1);
-        expect(squadratRepository.saveTrailSquadrats).toHaveBeenCalledTimes(1);
-        expect(squadratRepository.saveTrailSquadrats.mock.calls[0][0]).toBe(123);
-        expect(squadratRepository.saveTrailSquadrats.mock.calls[0][1].length).toBeGreaterThan(0);
+        expect(tile17Repository.saveTrailTiles17).toHaveBeenCalledTimes(1);
+        expect(tile17Repository.saveTrailTiles17.mock.calls[0][0]).toBe(123);
+        expect(tile17Repository.saveTrailTiles17.mock.calls[0][1].length).toBeGreaterThan(0);
     });
 });

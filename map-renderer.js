@@ -217,6 +217,7 @@ class MapRenderer {
         this.selectedRouteFeature = null;
         this.selectedTileZoom = null;
         this.selectedTile = null;
+        this.tile17Records = [];
         this.routeInfoPopup = document.getElementById('routeInfoPopup');
 
         this.mapSources = {
@@ -240,6 +241,7 @@ class MapRenderer {
         this.layers = {
             squadrats: false,      // Z14
             squadrathinos: false,  // Z17
+            tile17: false,         // Z17 from database
             ubersquadrat: false,   // Z11
             ubersquadratinho: false // Z14 (Distinct)
         };
@@ -788,6 +790,11 @@ class MapRenderer {
         this.updateStats();
     }
 
+    setTile17Records(records) {
+        this.tile17Records = Array.isArray(records) ? records : [];
+        this.requestUpdate();
+    }
+
     updateStats() {
         let polys = 0, lines = 0, points = 0;
         this.features.forEach(f => {
@@ -995,6 +1002,27 @@ class MapRenderer {
             this.ctx.lineWidth = 2;
             this.ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
             this.ctx.strokeRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
+            this.ctx.restore();
+        }
+
+        if (this.layers.tile17 && this.tile17Records.length > 0) {
+            this.ctx.save();
+            this.ctx.fillStyle = 'rgba(34, 197, 94, 0.18)';
+            this.ctx.strokeStyle = 'rgba(34, 197, 94, 0.8)';
+            this.ctx.lineWidth = 1;
+
+            this.tile17Records.forEach(record => {
+                const topLeft = this.project(record.min_lon, record.max_lat);
+                const bottomRight = this.project(record.max_lon, record.min_lat);
+                const sx = topLeft.x - centerWorld.x + cx;
+                const sy = topLeft.y - centerWorld.y + cy;
+                const w = bottomRight.x - topLeft.x;
+                const h = bottomRight.y - topLeft.y;
+
+                this.ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
+                this.ctx.strokeRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
+            });
+
             this.ctx.restore();
         }
 

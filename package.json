@@ -6,7 +6,7 @@
         "start": "node server.js",
         "import:gpx": "node scripts/import-gpx-directory.js",
         "import:user-gpx": "node scripts/import-user-gpx-directory.js",
-        "backfill:squadrats": "node scripts/backfill-trail-squadrats.js",
+        "backfill:tile17": "node scripts/backfill-trail-tile17.js",
         "test": "jest",
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage"

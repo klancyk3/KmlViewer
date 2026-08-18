@@ -1,4 +1,4 @@
-const APP_CACHE = 'kml-viewer-app-v16';
+const APP_CACHE = 'kml-viewer-app-v17';
 const MAP_CACHE = 'osm-map-tiles-v2';
 const FONT_CACHE = 'kml-viewer-fonts-v1';
 const APP_SHELL = [
@@ -11,7 +11,7 @@ const APP_SHELL = [
     './geo-utils.js',
     './trail-layer-controller.js',
     './map-renderer.js',
-    './squadrat.js',
+    './tile17.js',
     './sample.kml',
     './manifest.json'
 ];

@@ -26,4 +26,13 @@ describe('trail routes helpers', () => {
             maxLat: 50.3
         });
     });
+
+    test('parseBounds returns null for inverted bounds', () => {
+        expect(parseBounds({
+            minLon: '20.2',
+            minLat: '50.3',
+            maxLon: '19.1',
+            maxLat: '49.9'
+        })).toBeNull();
+    });
 });
