@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.784122">
+﻿<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.784122">
   <PropertyGroup>
     <StartupCommand>npm start</StartupCommand>
     <StartupBrowserUrl>http://localhost:5177</StartupBrowserUrl>
@@ -6,4 +6,7 @@
     <JavaScriptTestFramework>Jest</JavaScriptTestFramework>
     <ShouldRunNpmInstall>false</ShouldRunNpmInstall>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="gpxes\" />
+  </ItemGroup>
 </Project>

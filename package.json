@@ -6,6 +6,7 @@
         "start": "node server.js",
         "import:gpx": "node scripts/import-gpx-directory.js",
         "import:user-gpx": "node scripts/import-user-gpx-directory.js",
+        "convert:fit": "node scripts/convert-fit-to-gpx.js",
         "backfill:tile17": "node scripts/backfill-trail-tile17.js",
         "refresh:all": "npm run import:gpx && npm run import:user-gpx && npm run backfill:tile17",
         "test": "jest",
@@ -31,6 +32,7 @@
         "@capacitor/core": "^8.0.1",
         "cors": "^2.8.6",
         "express": "^4.22.1",
+        "fit-file-parser": "^4.1.0",
         "pg": "^8.23.0",
         "xmldom": "^0.6.0"
     }
