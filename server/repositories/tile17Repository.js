@@ -16,7 +16,7 @@ class Tile17Repository {
         return result.rows.map(row => ({
             id: row.id,
             geometry: row.geometry,
-            trailType: row.trail_type
+            trail_type: row.trail_type
         }));
     }
 
