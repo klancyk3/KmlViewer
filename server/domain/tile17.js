@@ -22,7 +22,7 @@ class Tile17 {
         });
     }
 
-    static collectForLineString(coordinates, zoom = TILE_ZOOM) {
+    static collectForLineString(coordinates, withBreaks, zoom = TILE_ZOOM) {
         if (!Array.isArray(coordinates) || coordinates.length === 0) {
             return [];
         }
@@ -32,8 +32,8 @@ class Tile17 {
         for (let i = 0; i < coordinates.length; i += 1) {
             const current = lonLatToTileFraction(coordinates[i].lon, coordinates[i].lat, zoom);
             addTileKey(tileKeys, Math.floor(current.x), Math.floor(current.y));
-
-            if (i === 0) continue;
+            
+            if (withBreaks || i === 0) continue;
 
             const previous = lonLatToTileFraction(coordinates[i - 1].lon, coordinates[i - 1].lat, zoom);
             supercoverTiles(previous.x, previous.y, current.x, current.y).forEach(({ x, y }) => {

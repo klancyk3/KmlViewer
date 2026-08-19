@@ -7,14 +7,16 @@ class Tile17Repository {
         const result = await this.database.query(`
             SELECT
                 id,
-                ST_AsGeoJSON(geom)::json AS geometry
+                ST_AsGeoJSON(geom)::json AS geometry,
+                trail_type
             FROM gpx_trails
             ORDER BY id
         `);
 
         return result.rows.map(row => ({
             id: row.id,
-            geometry: row.geometry
+            geometry: row.geometry,
+            trailType: row.trail_type
         }));
     }
 

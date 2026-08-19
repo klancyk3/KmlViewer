@@ -23,12 +23,21 @@ describe('Tile17', () => {
         expect(uniqueKeys.size).toBe(tiles17.length);
     });
 
-    test('includes tiles crossed between distant points without intermediate vertices', () => {
+    test('includes tiles without crossed between distant points with intermediate vertices (with breaks)', () => {
         const tiles17 = Tile17.collectForLineString([
             { lon: 19.9, lat: 50.05 },
             { lon: 20.1, lat: 50.2 }
-        ]);
+        ], true);
 
-        expect(tiles17.length).toBeGreaterThan(1);
+        expect(tiles17.length).toBe(2);
+    });
+
+    test('includes tiles crossed between distant points without intermediate vertices (without breaks)', () => {
+        const tiles17 = Tile17.collectForLineString([
+            { lon: 19.9, lat: 50.05 },
+            { lon: 20.1, lat: 50.2 }
+        ], false);
+
+        expect(tiles17.length).toBeGreaterThan(2);
     });
 });

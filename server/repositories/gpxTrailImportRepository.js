@@ -87,7 +87,7 @@ class GpxTrailImportRepository {
         if (this.tile17Repository && Array.isArray(segment.coordinates) && segment.coordinates.length > 0) {
             await this.tile17Repository.saveTrailTiles17(
                 result.rows[0].id,
-                Tile17.collectForLineString(segment.coordinates)
+                Tile17.collectForLineString(segment.coordinates, segment.trailType === 'user')
             );
         }
 
