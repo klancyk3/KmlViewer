@@ -244,6 +244,7 @@ class MapRenderer {
             squadrats: false,      // Z14
             squadrathinos: false,  // Z17
             tile17: false,         // Z17 from database
+            usersTiles: false,     // User's Z17 tiles from database
             ubersquadrat: false,   // Z11
             ubersquadratinho: false // Z14 (Distinct)
         };
@@ -1012,7 +1013,7 @@ class MapRenderer {
             this.ctx.restore();
         }
 
-        if (this.layers.tile17 && this.tile17Records.length > 0) {
+        if ((this.layers.tile17 || this.layers.usersTiles) && this.tile17Records.length > 0) {
             this.ctx.save();
             this.ctx.lineWidth = 1;
 
@@ -1020,7 +1021,12 @@ class MapRenderer {
                 const hasUserRoute = record.has_user_route === true;
                 const hasTrailRoute = record.has_trail_route === true;
 
-                if (!hasTrailRoute) {
+                // For tile17 layer: render tiles that intersect trail routes
+                const shouldRenderTile17 = this.layers.tile17 && hasTrailRoute;
+                // For usersTiles layer: render all tiles where user has activity
+                const shouldRenderUsersTiles = this.layers.usersTiles && hasUserRoute;
+
+                if (!shouldRenderTile17 && !shouldRenderUsersTiles) {
                     return;
                 }
 
@@ -1031,8 +1037,16 @@ class MapRenderer {
                 const w = bottomRight.x - topLeft.x;
                 const h = bottomRight.y - topLeft.y;
 
-                this.ctx.fillStyle = hasUserRoute ? 'rgba(34, 197, 94, 0.18)' : 'rgba(239, 68, 68, 0.18)';
-                this.ctx.strokeStyle = hasUserRoute ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+                if (shouldRenderUsersTiles && !shouldRenderTile17) {
+                    // Unique styling for UsersTiles layer alone
+                    this.ctx.fillStyle = 'rgba(34, 197, 94, 0.25)';
+                    this.ctx.strokeStyle = 'rgba(34, 197, 94, 0.9)';
+                } else {
+                    // Standard styling for Tile17 layer (or both enabled)
+                    this.ctx.fillStyle = hasUserRoute ? 'rgba(34, 197, 94, 0.18)' : 'rgba(239, 68, 68, 0.18)';
+                    this.ctx.strokeStyle = hasUserRoute ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)';
+                }
+
                 this.ctx.fillRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
                 this.ctx.strokeRect(Math.floor(sx), Math.floor(sy), Math.ceil(w), Math.ceil(h));
             });

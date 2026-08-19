@@ -143,6 +143,8 @@ npm run convert:fit -- "D:\Tracks\activity.fit"
 npm run convert:fit -- "D:\Tracks\Fit" "D:\Tracks\Gpx"
 npm run convert:fit -- "D:\Tracks\Fit" "D:\Tracks\Gpx" --overwrite
 ```
+npm run convert:fit -- "D:\Maps\UserGpx\garmin\DI_CONNECT\DI-Connect-Uploaded-Files\UploadedFiles_0-_Part1" "D:\Maps\UserGpx\garmin\DI_CONNECT\DI-Connect-Uploaded-Files"
+
 
 Zasady działania:
 
@@ -196,18 +198,6 @@ Uruchamia testy i generuje raport pokrycia:
 ```bash
 npm run test:coverage
 ```
-
-## Paski postępu w PowerShell
-
-Skrypty uruchamiane z terminala pokazują procentowy postęp bieżącego zadania:
-
-- `npm run import:gpx`
-- `npm run import:user-gpx`
-- `npm run convert:fit`
-- `npm run backfill:tile17`
-- `npm run refresh:all`
-
-W przypadku importów i konwersji procent liczony jest względem liczby plików, a przy backfillu względem liczby tras do przetworzenia.
 
 ## Skrypty w katalogu `scripts/`
 

@@ -332,6 +332,7 @@ document.querySelectorAll('.menu-group-toggle').forEach(toggle => {
     ['layerSquadrats', 'squadrats'],
     ['layerSquadrathinos', 'squadrathinos'],
     ['layerTile17', 'tile17'],
+    ['layerUsersTiles', 'usersTiles'],
     ['layerUbersquadrat', 'ubersquadrat'],
     ['layerUbersquadratinho', 'ubersquadratinho']
 ].forEach(([id, layerKey]) => {
@@ -339,7 +340,7 @@ document.querySelectorAll('.menu-group-toggle').forEach(toggle => {
     if (el) {
         el.addEventListener('change', (e) => {
             renderer.layers[layerKey] = e.target.checked;
-            if (layerKey === 'tile17') {
+            if (layerKey === 'tile17' || layerKey === 'usersTiles') {
                 refreshTile17Layer(true);
             }
             renderer.requestUpdate();
@@ -351,7 +352,7 @@ let lastTile17BoundsKey = null;
 let tile17RequestId = 0;
 
 async function refreshTile17Layer(force = false) {
-    if (!renderer.layers.tile17) {
+    if (!renderer.layers.tile17 && !renderer.layers.usersTiles) {
         renderer.setTile17Records([]);
         lastTile17BoundsKey = null;
         return;
